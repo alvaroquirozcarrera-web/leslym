@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 5: SQL Server Consultas con Múltiples Tablas (JOINs)</title>
+    <style>
+        /* --- VARIABLES CSS & RESET --- */
+        :root {
+            --primary-color: #0078d4; /* Azul SQL Server */
+            --secondary-color: #2d2d2d;
+            --accent-color: #e1f5fe;
+            --text-color: #333333;
+            --bg-color: #f8f9fa;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --number: #b5cea8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --spacing: 2rem;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* --- LAYOUT GENERAL --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: var(--white);
+            padding: 3rem 0 4rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- BOTÓN DE NAVEGACIÓN --- */
+        .nav-bar { margin-top: 2rem; text-align: right; }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f8ff;
+        }
+
+        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary-color); margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h3 { margin-bottom: 1rem; color: var(--secondary-color); }
+        h4 { margin-bottom: 0.5rem; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* --- SECCIONES Y TARJETAS --- */
+        section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .intro-list {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .intro-list li {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .context-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+
+        /* --- COMPONENTE: PREGUNTA - CÓDIGO - RESPUESTA --- */
+        .lesson-step {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-step:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .step-header {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-badge {
+            background: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .step-content { padding: 1.5rem; }
+        .question-box { margin-bottom: 1rem; font-style: italic; font-size: 1.1rem; color: #555; }
+
+        /* --- WRAPPER Y BOTÓN DE COPIAR --- */
+        .code-wrapper { position: relative; margin-bottom: 1.5rem; }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
+            opacity: 0.7; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .copy-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.2); }
+        .copy-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .copy-btn.copied { background-color: #28a745; border-color: #28a745; opacity: 1; }
+
+        /* --- BLOQUES DE CÓDIGO --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem; padding-top: 2.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+        }
+
+        /* Sintaxis SQL */
+        .kw { color: var(--keyword); font-weight: bold; }
+        .str { color: var(--string); }
+        .num { color: var(--number); }
+        .type { color: #4ec9b0; }
+        .func { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+
+        /* --- EXPLICACIÓN Y TABLAS --- */
+        .explanation {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-table-wrapper { overflow-x: auto; margin-top: 1rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: var(--primary-color); color: var(--white); }
+        tr:nth-child(even) { background-color: var(--bg-color); }
+
+        /* Subtítulos internos */
+        .sub-example-title {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: block;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* --- RESUMEN FINAL --- */
+        .summary-table th, .summary-table td { border: 1px solid #ddd; }
+        code.inline { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d63384; }
+
+        footer {
+            text-align: center; padding: 2rem; color: #666; font-size: 0.9rem;
+            border-top: 1px solid #eee; margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .nav-bar { text-align: center; margin-top: 1.5rem; }
+            .step-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Clase 5 de 14 — Consultas con múltiples tablas (JOINs)</h1>
+            <p>🎯 Ejemplos resueltos y explicados paso a paso</p>
+
+            <!-- BOTÓN DE NAVEGACIÓN -->
+            <div class="nav-bar">
+                <a href="6_SQL.HTML" class="nav-btn">
+                    Ir a Siguiente Clase (Clase 6)
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Objetivos -->
+        <section id="objetivos">
+            <h2>Objetivo de la clase</h2>
+            <ul class="intro-list">
+                <li>Consultar con múltiples tablas</li>
+                <li>Tipos de JOINs (INNER, LEFT, RIGHT, FULL, CROSS)</li>
+                <li>Informe de ventas completo</li>
+            </ul>
+        </section>
+
+        <!-- Contexto -->
+        <div class="context-box">
+            <h3>🏢 Contexto real: Empresa “TechMarket” (parte 2)</h3>
+            <p>Sigues trabajando en TechMarket. Ahora, el gerente te pide crear un informe de ventas combinando información de clientes, productos y pedidos. Para eso, deberás conectar (unir) los datos de varias tablas con JOINs.</p>
+        </div>
+
+        <!-- PASO 1: Tablas -->
+        <section>
+            <h2>🔹 1. Las tablas de trabajo</h2>
+            <p>Usaremos tres tablas:</p>
+            <br>
+
+            <h4>🧩 Tabla Clientes</h4>
+            <div class="result-table-wrapper">
+                <table>
+                    <thead><tr><th>IdCliente</th><th>NombreCliente</th><th>Ciudad</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>Ana Torres</td><td>Lima</td></tr>
+                        <tr><td>2</td><td>Luis Pérez</td><td>Arequipa</td></tr>
+                        <tr><td>3</td><td>Sofía Ramos</td><td>Cusco</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+
+            <h4>🧩 Tabla Productos</h4>
+            <div class="result-table-wrapper">
+                <table>
+                    <thead><tr><th>IdProducto</th><th>NombreProducto</th><th>Precio</th></tr></thead>
+                    <tbody>
+                        <tr><td>101</td><td>Laptop Lenovo</td><td>2899.90</td></tr>
+                        <tr><td>102</td><td>Mouse Logitech</td><td>89.50</td></tr>
+                        <tr><td>103</td><td>Teclado Redragon</td><td>129.99</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+
+            <h4>🧩 Tabla Pedidos</h4>
+            <div class="result-table-wrapper">
+                <table>
+                    <thead><tr><th>IdPedido</th><th>IdCliente</th><th>IdProducto</th><th>Cantidad</th><th>Fecha</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td>1</td><td>101</td><td>1</td><td>2024-10-10</td></tr>
+                        <tr><td>2</td><td>2</td><td>103</td><td>2</td><td>2024-10-11</td></tr>
+                        <tr><td>3</td><td>3</td><td>102</td><td>1</td><td>2024-10-12</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PASO 2: INNER JOIN -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 2</span> INNER JOIN — unir solo los que coinciden</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El gerente quiere ver una lista de qué cliente compró qué producto y cuánto pagó.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> 
+    C.NombreCliente <span class="kw">AS</span> Cliente,
+    P.NombreProducto <span class="kw">AS</span> Producto,
+    Ped.Cantidad,
+    P.Precio,
+    (Ped.Cantidad * P.Precio) <span class="kw">AS</span> Total
+<span class="kw">FROM</span> Pedidos <span class="kw">AS</span> Ped
+<span class="kw">INNER JOIN</span> Clientes <span class="kw">AS</span> C <span class="kw">ON</span> Ped.IdCliente = C.IdCliente
+<span class="kw">INNER JOIN</span> Productos <span class="kw">AS</span> P <span class="kw">ON</span> Ped.IdProducto = P.IdProducto;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>INNER JOIN</code> une las tablas solo cuando hay coincidencia.</li>
+                        <li><code>AS</code> crea un alias (abreviatura) para el nombre de la tabla.</li>
+                        <li><code>(Ped.Cantidad * P.Precio)</code> calcula el total pagado.</li>
+                    </ul>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr></thead>
+                        <tbody>
+                            <tr><td>Ana Torres</td><td>Laptop Lenovo</td><td>1</td><td>2899.90</td><td>2899.90</td></tr>
+                            <tr><td>Luis Pérez</td><td>Teclado Redragon</td><td>2</td><td>129.99</td><td>259.98</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Mouse Logitech</td><td>1</td><td>89.50</td><td>89.50</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 3: LEFT JOIN -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 3</span> LEFT JOIN — todos los clientes, aunque no tengan pedidos</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Ahora el gerente quiere ver todos los clientes, incluso los que no compraron nada aún.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> 
+    C.NombreCliente,
+    P.NombreProducto,
+    Ped.Cantidad
+<span class="kw">FROM</span> Clientes <span class="kw">AS</span> C
+<span class="kw">LEFT JOIN</span> Pedidos <span class="kw">AS</span> Ped <span class="kw">ON</span> C.IdCliente = Ped.IdCliente
+<span class="kw">LEFT JOIN</span> Productos <span class="kw">AS</span> P <span class="kw">ON</span> Ped.IdProducto = P.IdProducto;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>LEFT JOIN</code> muestra todos los clientes (izquierda), aunque no tengan coincidencia en Pedidos.</li>
+                        <li>Si un cliente no tiene pedidos, las columnas de Productos aparecerán como <strong>NULL</strong> (vacías), pero el registro principal del cliente siempre aparece.</li>
+                    </ul>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>NombreCliente</th><th>NombreProducto</th><th>Cantidad</th></tr></thead>
+                        <tbody>
+                            <tr><td>Ana Torres</td><td>Laptop Lenovo</td><td>1</td></tr>
+                            <tr><td>Luis Pérez</td><td>Teclado Redragon</td><td>2</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Mouse Logitech</td><td>1</td></tr>
+                            <tr><td><em>Carlos Gómez</em></td><td><strong>NULL</strong></td><td><strong>NULL</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 0.9em; color: #666;">* Si agregamos un cliente nuevo sin pedido (Carlos Gómez), aparecería con NULLs.</p>
+            </div>
+        </article>
+
+        <!-- PASO 4: RIGHT JOIN -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 4</span> RIGHT JOIN — todos los productos, aunque nadie los haya comprado</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El gerente también quiere saber si hay productos sin ventas.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> 
+    P.NombreProducto,
+    Ped.Cantidad,
+    C.NombreCliente
+<span class="kw">FROM</span> Pedidos <span class="kw">AS</span> Ped
+<span class="kw">RIGHT JOIN</span> Productos <span class="kw">AS</span> P <span class="kw">ON</span> Ped.IdProducto = P.IdProducto
+<span class="kw">LEFT JOIN</span> Clientes <span class="kw">AS</span> C <span class="kw">ON</span> Ped.IdCliente = C.IdCliente;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>RIGHT JOIN</code> muestra todos los registros de la tabla de la derecha (en este caso Productos).</li>
+                        <li>Ideal para ver datos que existen en una tabla pero no en la otra.</li>
+                        <li>Los productos Monitor Samsung y Silla Gamer DXRacer no tienen ventas, por eso aparecen con NULL.</li>
+                    </ul>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>NombreProducto</th><th>Cantidad</th><th>NombreCliente</th></tr></thead>
+                        <tbody>
+                            <tr><td>Laptop Lenovo</td><td>1</td><td>Ana Torres</td></tr>
+                            <tr><td>Teclado Redragon</td><td>2</td><td>Luis Pérez</td></tr>
+                            <tr><td>Mouse Logitech</td><td>1</td><td>Sofía Ramos</td></tr>
+                            <tr><td>Monitor Samsung</td><td><strong>NULL</strong></td><td><strong>NULL</strong></td></tr>
+                            <tr><td>Silla Gamer DXRacer</td><td><strong>NULL</strong></td><td><strong>NULL</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 5: FULL OUTER JOIN -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 5</span> FULL OUTER JOIN — mostrar todo, coincida o no</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Para ver toda la información combinada, incluso si hay clientes sin pedidos o productos sin vender.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> 
+    C.NombreCliente,
+    P.NombreProducto,
+    Ped.Cantidad
+<span class="kw">FROM</span> Pedidos <span class="kw">AS</span> Ped
+<span class="kw">FULL OUTER JOIN</span> Clientes <span class="kw">AS</span> C <span class="kw">ON</span> Ped.IdCliente = C.IdCliente
+<span class="kw">FULL OUTER JOIN</span> Productos <span class="kw">AS</span> P <span class="kw">ON</span> Ped.IdProducto = P.IdProducto;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>FULL OUTER JOIN</code> une todo, tanto coincidencias como valores faltantes.</li>
+                        <li>Es muy útil para hacer informes completos o detectar registros sin relación.</li>
+                    </ul>
+                </div>
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>NombreCliente</th><th>NombreProducto</th><th>Cantidad</th></tr></thead>
+                        <tbody>
+                            <tr><td>Ana Torres</td><td>Laptop Lenovo</td><td>1</td></tr>
+                            <tr><td>Luis Pérez</td><td>Teclado Redragon</td><td>2</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Mouse Logitech</td><td>1</td></tr>
+                            <tr><td><em>Carlos Gómez</em></td><td><strong>NULL</strong></td><td><strong>NULL</strong></td></tr>
+                            <tr><td><strong>NULL</strong></td><td><em>Monitor Nuevo</em></td><td><strong>NULL</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 6: CROSS JOIN -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 6</span> CROSS JOIN — combinación total</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Si el gerente quisiera todas las combinaciones posibles entre clientes y productos (para simular promociones).
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> 
+    C.NombreCliente,
+    P.NombreProducto
+<span class="kw">FROM</span> Clientes <span class="kw">AS</span> C
+<span class="kw">CROSS JOIN</span> Productos <span class="kw">AS</span> P;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li>Cada cliente se combina con todos los productos (3 clientes × 3 productos = 9 combinaciones).</li>
+                        <li>Se usa para simulaciones, pruebas o escenarios como promociones.</li>
+                    </ul>
+                </div>
+                
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>NombreCliente</th><th>NombreProducto</th></tr></thead>
+                        <tbody>
+                            <tr><td>Ana Torres</td><td>Laptop Lenovo</td></tr>
+                            <tr><td>Ana Torres</td><td>Mouse Logitech</td></tr>
+                            <tr><td>Ana Torres</td><td>Teclado Redragon</td></tr>
+                            <tr><td>Luis Pérez</td><td>Laptop Lenovo</td></tr>
+                            <tr><td>Luis Pérez</td><td>Mouse Logitech</td></tr>
+                            <tr><td>Luis Pérez</td><td>Teclado Redragon</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Laptop Lenovo</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Mouse Logitech</td></tr>
+                            <tr><td>Sofía Ramos</td><td>Teclado Redragon</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- Resumen -->
+        <section>
+            <h2>🧾 Resumen de la Clase 5 de 14 — JOINs</h2>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr><th>Tipo de JOIN</th><th>Qué hace</th><th>Cuándo usarlo</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>INNER JOIN</strong></td>
+                            <td>Une solo los que coinciden</td>
+                            <td>Informes de ventas reales</td>
+                        </tr>
+                        <tr>
+                            <td><strong>LEFT JOIN</strong></td>
+                            <td>Todos los de la izquierda, aunque no coincidan</td>
+                            <td>Clientes sin compras</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RIGHT JOIN</strong></td>
+                            <td>Todos los de la derecha, aunque no coincidan</td>
+                            <td>Productos sin ventas</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FULL OUTER JOIN</strong></td>
+                            <td>Todo, coincida o no</td>
+                            <td>Análisis general</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CROSS JOIN</strong></td>
+                            <td>Todas las combinaciones posibles</td>
+                            <td>Simulaciones o pruebas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Curso de SQL Server - Clase 5 de 14</p>
+    </footer>
+
+    <!-- SCRIPT PARA COPIAR CÓDIGO -->
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const textToCopy = code.innerText;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Hubo un error al intentar copiar el código.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

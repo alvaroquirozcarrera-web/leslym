@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso SQL Server Completo - 14 Clases</title>
+    <style>
+        :root {
+            --primary: #2c3e50;       /* Azul oscuro corporativo */
+            --secondary: #34495e;     /* Gris azulado */
+            --accent: #e67e22;        /* Naranja vibrante */
+            --highlight: #f1c40f;     /* Amarillo */
+            --bg: #ecf0f1;            /* Fondo gris claro */
+            --white: #ffffff;
+            --code-bg: #282c34;       /* Fondo código oscuro */
+            --code-text: #abb2bf;
+            --keyword: #c678dd;
+            --string: #98c379;
+            --table-header: #d35400;
+            --table-row-alt: #fdf2e9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- LAYOUT --- */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* --- TARJETA PRINCIPAL --- */
+        .slide-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 950px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            padding: 35px;
+            animation: slideIn 0.4s ease-out;
+            border-top: 6px solid var(--accent);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- BARRA LATERAL (SCHEMA) --- */
+        .sidebar {
+            width: 300px;
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-left: 4px solid var(--accent);
+            box-shadow: -4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar h3 {
+            color: var(--highlight);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--secondary);
+            padding-bottom: 5px;
+        }
+
+        .db-schema-block {
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+        }
+
+        .schema-title {
+            color: var(--accent);
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .schema-cols {
+            color: #bdc3c7;
+            list-style: none;
+            padding-left: 10px;
+        }
+
+        .schema-cols li::before {
+            content: "•";
+            color: var(--highlight);
+            margin-right: 5px;
+        }
+
+        /* --- NAVEGACIÓN --- */
+        .controls-bar {
+            background: var(--white);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+
+        .page-indicator {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+            background: var(--bg);
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+
+        .nav-btn {
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .nav-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- ESTRUCTURA DE APRENDIZAJE --- */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .class-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .learning-block {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .learning-block::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: var(--accent);
+            border-radius: 8px 0 0 8px;
+        }
+
+        .lb-header {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lb-icon { font-size: 1.2rem; }
+
+        .lb-request { color: #7f8c8d; font-style: italic; margin-bottom: 10px; }
+
+        /* --- CÓDIGO Y RESULTADOS --- */
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            margin: 10px 0;
+            border: 1px solid #444;
+        }
+
+        .kwd { color: var(--keyword); }
+        .str { color: var(--string); }
+        .func { color: #61afef; }
+        .tbl { color: #e06c75; }
+        .op { color: #56b6c2; }
+
+        table.result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        table.result-table th {
+            background-color: var(--table-header);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+
+        table.result-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            background-color: var(--white);
+        }
+
+        table.result-table tr:nth-child(even) td {
+            background-color: var(--table-row-alt);
+        }
+
+        .note-box {
+            background-color: #fff8e1;
+            border-left: 4px solid var(--highlight);
+            padding: 10px 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #795548;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 850px) {
+            .sidebar { display: none; }
+            .slide-card { padding: 20px; }
+            .class-title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="content-area">
+            <div id="slide-container" class="slide-card">
+                <!-- Contenido dinámico aquí -->
+            </div>
+        </div>
+
+        <div class="controls-bar">
+            <button class="nav-btn" id="btn-prev" onclick="changeSlide(-1)">⬅ Anterior</button>
+            <div class="page-indicator">Clase <span id="current-num">1</span> de 14</div>
+            <button class="nav-btn" id="btn-next" onclick="changeSlide(1)">Siguiente ➡</button>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <h3>🗄️ Base de Datos Global</h3>
+        
+        <div class="db-schema-block">
+            <span class="schema-title">📦 Productos</span>
+            <ul class="schema-cols">
+                <li>IdProducto (PK, INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Categoria (VARCHAR)</li>
+                <li>Precio (DECIMAL)</li>
+                <li>Stock (INT)</li>
+            </ul>
+        </div>
+
+        <div class="db-schema-block">
+            <span class="schema-title">👥 Clientes</span>
+            <ul class="schema-cols">
+                <li>IdCliente (PK, INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Ciudad (VARCHAR)</li>
+                <li>Email (VARCHAR)</li>
+            </ul>
+        </div>
+
+        <div class="db-schema-block">
+            <span class="schema-title">🛒 Pedidos</span>
+            <ul class="schema-cols">
+                <li>IdPedido (PK, INT)</li>
+                <li>IdCliente (FK, INT)</li>
+                <li>IdProducto (FK, INT)</li>
+                <li>Cantidad (INT)</li>
+                <li>Fecha (DATE)</li>
+            </ul>
+        </div>
+
+        <div class="db-schema-block">
+            <span class="schema-title">🏢 Empleados</span>
+            <ul class="schema-cols">
+                <li>IdEmpleado (PK, INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Cargo (VARCHAR)</li>
+                <li>Sueldo (DECIMAL)</li>
+            </ul>
+        </div>
+    </aside>
+
+    <script>
+        // --- CONTENIDO DE LAS 14 CLASES ---
+        const courseData = [
+            {
+                id: 1,
+                title: "Fundamentos y Creación",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 1: Fundamentos y Creación</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Lo que se pide</div>
+                        <div class="lb-request">Crear la base de datos "TechMarket", crear la tabla "Productos" con sus columnas e insertar 3 productos iniciales.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE DATABASE</span> TechMarket;
+<span class="kwd">GO</span>
+
+<span class="kwd">USE</span> TechMarket;
+
+<span class="kwd">CREATE TABLE</span> Productos (
+    IdProducto <span class="kwd">INT PRIMARY KEY</span>,
+    Nombre <span class="kwd">VARCHAR</span>(50),
+    Categoria <span class="kwd">VARCHAR</span>(30),
+    Precio <span class="kwd">DECIMAL</span>(10,2),
+    Stock <span class="kwd">INT</span>
+);
+
+<span class="kwd">INSERT INTO</span> Productos (IdProducto, Nombre, Categoria, Precio, Stock)
+<span class="kwd">VALUES</span>
+(1, <span class="str">'Laptop Lenovo'</span>, <span class="str">'Computadoras'</span>, 2899.90, 15),
+(2, <span class="str">'Mouse Logitech'</span>, <span class="str">'Accesorios'</span>, 89.50, 50),
+(3, <span class="str">'Teclado Redragon'</span>, <span class="str">'Accesorios'</span>, 129.99, 30);</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta (Estado de la tabla)</div>
+                        <table class="result-table">
+                            <tr><th>IdProducto</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Stock</th></tr>
+                            <tr><td>1</td><td>Laptop Lenovo</td><td>Computadoras</td><td>2899.90</td><td>15</td></tr>
+                            <tr><td>2</td><td>Mouse Logitech</td><td>Accesorios</td><td>89.50</td><td>50</td></tr>
+                            <tr><td>3</td><td>Teclado Redragon</td><td>Accesorios</td><td>129.99</td><td>30</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> <code>PRIMARY KEY</code> asegura que no haya IDs duplicados. <code>DECIMAL(10,2)</code> permite 8 dígitos enteros y 2 decimales.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 2,
+                title: "Filtrado (WHERE) y Ordenamiento",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 2: Filtrado y WHERE</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Lo que se pide</div>
+                        <div class="lb-request">Mostrar solo los productos de la categoría "Accesorios" y ordenarlos por precio de mayor a menor.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span> * 
+<span class="kwd">FROM</span> Productos
+<span class="kwd">WHERE</span> Categoria = <span class="str">'Accesorios'</span>
+<span class="kwd">ORDER BY</span> Precio <span class="kwd">DESC</span>;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta</div>
+                        <table class="result-table">
+                            <tr><th>Nombre</th><th>Categoria</th><th>Precio</th></tr>
+                            <tr><td>Teclado Redragon</td><td>Accesorios</td><td>129.99</td></tr>
+                            <tr><td>Mouse Logitech</td><td>Accesorios</td><td>89.50</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> <code>WHERE</code> filtra filas antes de devolverlas. <code>DESC</code> ordena descendente (mayor a menor). Usa <code>ASC</code> para el orden inverso.
+                        </div>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Búsqueda Parcial (LIKE)</div>
+                        <div class="lb-request">Buscar productos que contengan la palabra "Laptop".</div>
+                        <pre><span class="kwd">SELECT</span> * <span class="kwd">FROM</span> Productos
+<span class="kwd">WHERE</span> Nombre <span class="kwd">LIKE</span> <span class="str">'%Laptop%'</span>;</pre>
+                    </div>
+                `
+            },
+            {
+                id: 3,
+                title: "Funciones de Agregación",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 3: Funciones (COUNT, SUM, AVG)</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Lo que se pide</div>
+                        <div class="lb-request">Saber cuántos productos hay en total, cuál es el precio promedio y el stock sumado.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span>
+    <span class="func">COUNT</span>(*) <span class="kwd">AS</span> TotalProductos,
+    <span class="func">AVG</span>(Precio) <span class="kwd">AS</span> PrecioPromedio,
+    <span class="func">SUM</span>(Stock) <span class="kwd">AS</span> StockTotal
+<span class="kwd">FROM</span> Productos;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta (Valores calculados)</div>
+                        <table class="result-table">
+                            <tr><th>TotalProductos</th><th>PrecioPromedio</th><th>StockTotal</th></tr>
+                            <tr><td>3</td><td>1039.79</td><td>95</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> Las funciones de agregación reducen múltiples filas a una sola fila de resultado. <code>AS</code> sirve para ponerle un alias legible a la columna.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 4,
+                title: "Relaciones e INNER JOIN",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 4: Relaciones (INNER JOIN)</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Lo que se pide</div>
+                        <div class="lb-request">Mostrar qué clientes hicieron qué pedidos, uniendo sus nombres con los nombres de los productos.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span>
+    C.Nombre <span class="kwd">AS</span> Cliente,
+    P.Nombre <span class="kwd">AS</span> Producto,
+    Ped.Cantidad
+<span class="kwd">FROM</span> Pedidos <span class="kwd">AS</span> Ped
+<span class="kwd">INNER JOIN</span> Clientes C <span class="kwd">ON</span> Ped.IdCliente = C.IdCliente
+<span class="kwd">INNER JOIN</span> Productos P <span class="kwd">ON</span> Ped.IdProducto = P.IdProducto;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta</div>
+                        <table class="result-table">
+                            <tr><th>Cliente</th><th>Producto</th><th>Cantidad</th></tr>
+                            <tr><td>Carlos Ramos</td><td>Laptop Lenovo</td><td>2</td></tr>
+                            <tr><td>María Torres</td><td>Mouse Logitech</td><td>2</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> <code>INNER JOIN</code> devuelve solo las filas donde hay coincidencia en AMBAS tablas. Si un cliente no tiene pedidos, no aparece.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 5,
+                title: "Tipos de JOINs Avanzados",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 5: LEFT y RIGHT JOIN</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> LEFT JOIN (Todos los Clientes)</div>
+                        <div class="lb-request">Listar todos los clientes, incluso aquellos que no han comprado nada aún.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span> C.Nombre, P.Nombre
+<span class="kwd">FROM</span> Clientes C
+<span class="kwd">LEFT JOIN</span> Pedidos Ped <span class="kwd">ON</span> C.IdCliente = Ped.IdCliente
+<span class="kwd">LEFT JOIN</span> Productos P <span class="kwd">ON</span> Ped.IdProducto = P.IdProducto;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta (Ejemplo con NULL)</div>
+                        <table class="result-table">
+                            <tr><th>Cliente</th><th>Producto</th></tr>
+                            <tr><td>Carlos Ramos</td><td>Laptop Lenovo</td></tr>
+                            <tr><td>Juan Perez</td><td><em>NULL</em></td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> <code>LEFT JOIN</code> prioriza la tabla de la izquierda (Clientes). Si no hay match, devuelve <code>NULL</code>. <code>RIGHT JOIN</code> hace lo inverso (prioriza la tabla derecha).
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 6,
+                title: "Subconsultas (Subqueries)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 6: Subconsultas</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Subconsulta en WHERE</div>
+                        <div class="lb-request">Mostrar productos que tienen un precio mayor al precio promedio de todos los productos.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span> Nombre, Precio
+<span class="kwd">FROM</span> Productos
+<span class="kwd">WHERE</span> Precio > (
+    <span class="kwd">SELECT AVG</span>(Precio) <span class="kwd">FROM</span> Productos
+);</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta</div>
+                        <table class="result-table">
+                            <tr><th>Nombre</th><th>Precio</th></tr>
+                            <tr><td>Laptop Lenovo</td><td>2899.90</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> La subconsulta se ejecuta primero (calcula el promedio, ej: 1039). Luego la consulta principal usa ese número para filtrar.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                title: "Agrupamiento (GROUP BY & HAVING)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 7: Agrupamientos y HAVING</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Ventas por Cliente</div>
+                        <div class="lb-request">Calcular el total de dinero gastado por cada cliente.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">SELECT</span>
+    C.Nombre,
+    <span class="func">SUM</span>(P.Precio * Ped.Cantidad) <span class="kwd">AS</span> TotalGastado
+<span class="kwd">FROM</span> Pedidos Ped
+<span class="kwd">JOIN</span> Clientes C <span class="kwd">ON</span> Ped.IdCliente = C.IdCliente
+<span class="kwd">JOIN</span> Productos P <span class="kwd">ON</span> Ped.IdProducto = P.IdProducto
+<span class="kwd">GROUP BY</span> C.Nombre;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Respuesta</div>
+                        <table class="result-table">
+                            <tr><th>Nombre</th><th>TotalGastado</th></tr>
+                            <tr><td>Carlos Ramos</td><td>5799.80</td></tr>
+                            <tr><td>María Torres</td><td>179.00</td></tr>
+                        </table>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> <code>GROUP BY</code> agrupa filas. <code>HAVING</code> funciona como un <code>WHERE</code>, pero para filtrar los grupos ya agregados (ej: <code>HAVING SUM(Precio) > 1000</code>).
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 8,
+                title: "Modificación de Datos (DML)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 8: Insert, Update, Delete</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Múltiples Inserts</div>
+                        <div class="lb-request">Agregar varios empleados de golpe.</div>
+                        <pre><span class="kwd">INSERT INTO</span> Empleados (Nombre, Sueldo)
+<span class="kwd">VALUES</span>
+(<span class="str">'Ana'</span>, 1500),
+(<span class="str">'Beto'</span>, 1600);</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Update (Actualización)</div>
+                        <div class="lb-request">Dar un aumento del 10% a los empleados del departamento 2.</div>
+                        <pre><span class="kwd">UPDATE</span> Empleados
+<span class="kwd">SET</span> Sueldo = Sueldo * 1.10
+<span class="kwd">WHERE</span> IdDepartamento = 2;</pre>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> ¡Si olvidas el <code>WHERE</code>, actualizarás a TODA la tabla!
+                        </div>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Delete (Borrado)</div>
+                        <div class="lb-request">Eliminar al empleado con ID 5.</div>
+                        <pre><span class="kwd">DELETE FROM</span> Empleados <span class="kwd">WHERE</span> IdEmpleado = 5;</pre>
+                    </div>
+                `
+            },
+            {
+                id: 9,
+                title: "Restricciones (Constraints)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 9: Reglas de Integridad</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> FOREIGN KEY</div>
+                        <div class="lb-request">Al crear la tabla Pedidos, asegurar que el IdCliente exista en la tabla Clientes.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE TABLE</span> Pedidos (
+    IdPedido <span class="kwd">INT PRIMARY KEY</span>,
+    IdCliente <span class="kwd">INT</span>,
+    <span class="kwd">FOREIGN KEY</span> (IdCliente) 
+    <span class="kwd">REFERENCES</span> Clientes(IdCliente)
+);</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> CHECK (Validación)</div>
+                        <div class="lb-request">No permitir sueldos menores a 1000 en la tabla Empleados.</div>
+                        <pre><span class="kwd">ALTER TABLE</span> Empleados
+<span class="kwd">ADD CONSTRAINT</span> CHK_Sueldo 
+<span class="kwd">CHECK</span> (Sueldo >= 1000);</pre>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> Las restricciones protegen la calidad de los datos. Si intentas insertar un sueldo de 500, SQL dará error.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 10,
+                title: "Vistas (Views)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 10: Vistas (Views)</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Crear una Vista</div>
+                        <div class="lb-request">Guardar una consulta compleja (ventas detalladas) como un objeto virtual llamado "Vista_Reporte".</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE VIEW</span> Vista_Reporte
+<span class="kwd">AS</span>
+<span class="kwd">SELECT</span> C.Nombre, P.Nombre, Ped.Fecha
+<span class="kwd">FROM</span> Pedidos Ped
+<span class="kwd">JOIN</span> Clientes C <span class="kwd">ON</span> Ped.IdCliente = C.IdCliente
+<span class="kwd">JOIN</span> Productos P <span class="kwd">ON</span> Ped.IdProducto = P.IdProducto;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Usar la Vista</div>
+                        <div class="lb-request">Consultar la vista como si fuera una tabla normal.</div>
+                        <pre><span class="kwd">SELECT</span> * <span class="kwd">FROM</span> Vista_Reporte;</pre>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> Las vistas no almacenan datos, solo almacenan la consulta. Sirve para seguridad (ocultar columnas sensibles como sueldos) y simplificar código.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 11,
+                title: "Funciones Escalares",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 11: Funciones Escalares</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Crear Función</div>
+                        <div class="lb-request">Crear una función que calcule el impuesto (18%) de un precio dado.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE FUNCTION</span> fn_CalcularImpuesto(@Precio <span class="kwd">DECIMAL</span>)
+<span class="kwd">RETURNS DECIMAL</span>
+<span class="kwd">AS</span>
+<span class="kwd">BEGIN</span>
+    <span class="kwd">RETURN</span> @Precio * 0.18;
+<span class="kwd">END</span>;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Usar Función</div>
+                        <div class="lb-request">Listar productos con su precio y el impuesto calculado.</div>
+                        <pre><span class="kwd">SELECT</span> 
+    Nombre, 
+    Precio,
+    dbo.fn_CalcularImpuesto(Precio) <span class="kwd">AS</span> Impuesto
+<span class="kwd">FROM</span> Productos;</pre>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> Las funciones escalares reciben parámetros y devuelven un solo valor. Requieren el prefijo <code>dbo.</code> al llamarse.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 12,
+                title: "Procedimientos Almacenados (SP)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 12: Stored Procedures</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Crear Procedimiento</div>
+                        <div class="lb-request">Crear un procedimiento que reciba el nombre de una categoría y devuelva los productos de esa categoría.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE PROCEDURE</span> sp_BuscarPorCategoria
+    @CatNombre <span class="kwd">VARCHAR</span>(50)
+<span class="kwd">AS</span>
+<span class="kwd">BEGIN</span>
+    <span class="kwd">SELECT</span> * <span class="kwd">FROM</span> Productos
+    <span class="kwd">WHERE</span> Categoria = @CatNombre;
+<span class="kwd">END</span>;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Ejecutar Procedimiento</div>
+                        <div class="lb-request">Buscar los productos de "Computadoras".</div>
+                        <pre><span class="kwd">EXEC</span> sp_BuscarPorCategoria @CatNombre = <span class="str">'Computadoras'</span>;</pre>
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> Los SP permiten encapsular lógica compleja, mejorar el rendimiento y dar seguridad (no das acceso a las tablas, solo al SP).
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 13,
+                title: "Transacciones (Commit/Rollback)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 13: Transacciones</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> Lógica de Transacción</div>
+                        <div class="lb-request">Registrar un pedido, restar el stock. Si algo falla, deshacer todo para no dejar datos inconsistentes.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">BEGIN TRANSACTION</span>;
+
+<span class="cmt">-- Paso 1: Insertar Pedido</span>
+<span class="kwd">INSERT INTO</span> Pedidos ... 
+
+<span class="cmt">-- Paso 2: Actualizar Stock</span>
+<span class="kwd">UPDATE</span> Productos <span class="kwd">SET</span> Stock = Stock - 1 <span class="kwd">WHERE</span> IdProducto = 1;
+
+<span class="cmt">-- Verificación</span>
+<span class="kwd">IF</span> @@ERROR = 0
+    <span class="kwd">COMMIT TRANSACTION</span>; <span class="cmt">-- Confirmar todo</span>
+<span class="kwd">ELSE</span>
+    <span class="kwd">ROLLBACK TRANSACTION</span>; <span class="cmt">-- Deshacer todo</span></pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Concepto</div>
+                        <div class="note-box">
+                            <strong>⚠️ Nota Importante:</strong> <code>COMMIT</code> guarda los cambios permanentemente. <code>ROLLBACK</code> vuelve la base de datos al estado inicial antes de la transacción.
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 14,
+                title: "Triggers (Disparadores)",
+                content: `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase 14: Triggers</h1>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">📌</span> AFTER Trigger</div>
+                        <div class="lb-request">Crear un disparador que, al insertar un nuevo pedido, automáticamente envíe un correo de bienvenida o registre un log de auditoría.</div>
+                        
+                        <div class="lb-header"><span class="lb-icon">📝</span> Fórmula / Código</div>
+                        <pre><span class="kwd">CREATE TRIGGER</span> tr_LogVentas
+<span class="kwd">ON</span> Pedidos
+<span class="kwd">AFTER INSERT</span>
+<span class="kwd">AS</span>
+<span class="kwd">BEGIN</span>
+    <span class="cmt">-- Inserta en una tabla de Logs el dato que entró</span>
+    <span class="kwd">INSERT INTO</span> LogsVentas (Fecha, Mensaje)
+    <span class="kwd">SELECT</span> GETDATE(), <span class="str">'Nuevo pedido: '</span> + <span class="kwd">CAST</span>(IdPedido <span class="kwd">AS VARCHAR</span>)
+    <span class="kwd">FROM</span> inserted;
+<span class="kwd">END</span>;</pre>
+                    </div>
+
+                    <div class="learning-block">
+                        <div class="lb-header"><span class="lb-icon">✅</span> Concepto</div>
+                        <div class="note-box">
+                            <strong>⚠️ Nota Importante:</strong> Los Triggers se ejecutan automáticamente ante un evento (INSERT, UPDATE, DELETE). La tabla temporal <code>inserted</code> contiene los nuevos datos, y <code>deleted</code> contiene los datos viejos en actualizaciones/borrados.
+                        </div>
+                    </div>
+                `
+            }
+        ];
+
+        // --- LÓGICA DEL SLIDER ---
+        let currentIdx = 0;
+        const totalSlides = courseData.length;
+
+        function renderSlide() {
+            const data = courseData[currentIdx];
+            const container = document.getElementById('slide-container');
+            const numDisplay = document.getElementById('current-num');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            numDisplay.textContent = data.id;
+
+            // Animación simple de salida/entrada
+            container.style.opacity = 0;
+            
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="header-section">
+                        <h1 class="class-title">Clase ${data.id}: ${data.title}</h1>
+                        <span style="color:var(--accent); font-weight:bold;">SQL Server Course</span>
+                    </div>
+                    ${data.content}
+                `;
+                container.style.opacity = 1;
+            }, 200);
+
+            // Habilitar/Deshabilitar botones
+            btnPrev.disabled = currentIdx === 0;
+            btnNext.disabled = currentIdx === totalSlides - 1;
+        }
+
+        function changeSlide(dir) {
+            const newIdx = currentIdx + dir;
+            if (newIdx >= 0 && newIdx < totalSlides) {
+                currentIdx = newIdx;
+                renderSlide();
+            }
+        }
+
+        // Iniciar
+        window.onload = renderSlide;
+
+    </script>
+</body>
+</html>

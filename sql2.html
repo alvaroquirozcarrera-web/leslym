@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Server - Clases 6 a 10 (Completo)</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #e67e22;
+            --highlight: #f1c40f;
+            --success: #27ae60;
+            --bg: #ecf0f1;
+            --white: #ffffff;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --func: #dcdcaa;
+            --table-head: #e67e22;
+            --table-alt: #fdf2e9;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--primary);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .slide-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .slide-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 1100px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            animation: slideUp 0.5s ease;
+            border-top: 8px solid var(--accent);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sidebar {
+            width: 320px;
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            border-left: 5px solid var(--accent);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+        }
+
+        .sidebar h2 { font-size: 1.2rem; color: var(--highlight); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .schema-box {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .schema-title { color: var(--accent); font-weight: bold; margin-bottom: 8px; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;}
+        .schema-list { list-style: none; font-size: 0.85rem; color: #bdc3c7; padding-left: 10px; }
+        .schema-list li { margin-bottom: 4px; }
+        .tag-pk { color: var(--highlight); font-weight: bold; margin-right: 5px; }
+        .tag-fk { color: #e74c3c; font-weight: bold; margin-right: 5px; }
+
+        .nav-bar {
+            background: var(--white);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #ddd;
+        }
+
+        .nav-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-btn:hover { background: var(--accent); transform: translateY(-3px); }
+        .nav-btn:disabled { background: #95a5a6; cursor: not-allowed; transform: none; }
+
+        .page-indicator { font-weight: 800; font-size: 1.3rem; color: var(--secondary); background: #ecf0f1; padding: 8px 20px; border-radius: 20px; }
+
+        .module {
+            background: #fdfdfd;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            border-left: 4px solid var(--accent);
+        }
+
+        .module-title { font-size: 1.3rem; color: var(--secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .req-box { background: #e8f6f3; padding: 10px 15px; border-radius: 6px; color: #16a085; margin-bottom: 15px; font-size: 0.95rem; border-left: 4px solid #16a085; }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.9rem;
+            border: 1px solid #333;
+            margin-bottom: 15px;
+        }
+
+        .res-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        .res-table th { background: var(--table-head); color: white; padding: 12px; text-align: left; }
+        .res-table td { border: 1px solid #eee; padding: 10px; background: white; }
+        .res-table tr:nth-child(even) td { background: var(--table-alt); }
+        .null-val { color: #95a5a6; font-style: italic; }
+
+        .note-box { background: #fff8e1; border: 1px solid #ffe082; padding: 12px; border-radius: 6px; color: #7f6000; font-size: 0.9rem; margin-top: 10px; display: flex; gap: 10px; align-items: start; }
+        .note-icon { font-size: 1.2rem; }
+
+        @media (max-width: 900px) { .sidebar { display: none; } .slide-card { padding: 20px; } .class-title { font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="slide-area">
+            <div id="slide-content" class="slide-card"></div>
+        </div>
+        
+        <div class="nav-bar">
+            <button class="nav-btn" id="btn-prev" onclick="nav(-1)">⬅ Anterior</button>
+            <div class="page-indicator">Clase <span id="curr-num">6</span> de 10</div>
+            <button class="nav-btn" id="btn-next" onclick="nav(1)">Siguiente ➡</button>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <h2>🗄️ Base de Datos Global</h2>
+        
+        <div class="schema-box">
+            <span class="schema-title">📦 Productos</span>
+            <ul class="schema-list">
+                <li><span class="tag-pk">PK</span> IdProducto (INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Categoria (VARCHAR)</li>
+                <li>Precio (DECIMAL)</li>
+                <li>Stock (INT)</li>
+            </ul>
+        </div>
+
+        <div class="schema-box">
+            <span class="schema-title">👥 Clientes</span>
+            <ul class="schema-list">
+                <li><span class="tag-pk">PK</span> IdCliente (INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Ciudad (VARCHAR)</li>
+                <li>Email (VARCHAR)</li>
+            </ul>
+        </div>
+
+        <div class="schema-box">
+            <span class="schema-title">🛒 Pedidos</span>
+            <ul class="schema-list">
+                <li><span class="tag-pk">PK</span> IdPedido (INT)</li>
+                <li><span class="tag-fk">FK</span> IdCliente</li>
+                <li><span class="tag-fk">FK</span> IdProducto</li>
+                <li>Cantidad (INT)</li>
+                <li>Fecha (DATE)</li>
+            </ul>
+        </div>
+
+        <div class="schema-box">
+            <span class="schema-title">🏢 Empleados</span>
+            <ul class="schema-list">
+                <li><span class="tag-pk">PK</span> IdEmpleado (INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Cargo (VARCHAR)</li>
+                <li>Sueldo (DECIMAL)</li>
+                <li><span class="tag-fk">FK</span> IdDepartamento</li>
+            </ul>
+        </div>
+
+        <div class="schema-box">
+            <span class="schema-title">🏭 Departamentos</span>
+            <ul class="schema-list">
+                <li><span class="tag-pk">PK</span> IdDepartamento (INT)</li>
+                <li>Nombre (VARCHAR)</li>
+                <li>Ciudad (VARCHAR)</li>
+            </ul>
+        </div>
+    </aside>
+
+    <script>
+        const classesData = [
+            {
+                id: 6,
+                title: "Subconsultas y Consultas Anidadas",
+                content: `
+                    <div class="note-box" style="margin-bottom:20px;"><span class="note-icon">💡</span> <b>Contexto:</b> Consultas dentro de otras consultas para resultados intermedios dinámicos.</div>
+
+                    <div class="module">
+                        <div class="module-title">🔹 1. Subconsulta en WHERE</div>
+                        <div class="req-box">Productos que cuestan más que el precio promedio de la tabla.</div>
+                        <pre><span class="keyword">SELECT</span> Nombre, Precio
+<span class="keyword">FROM</span> Productos
+<span class="keyword">WHERE</span> Precio > (<span class="keyword">SELECT AVG</span>(Precio) <span class="keyword">FROM</span> Productos);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔹 2. Subconsulta en SELECT</div>
+                        <div class="req-box">Mostrar cada producto con su precio y, al lado, el precio promedio general de la tienda.</div>
+                        <pre><span class="keyword">SELECT</span>
+    Nombre,
+    Precio,
+    (<span class="keyword">SELECT AVG</span>(Precio) <span class="keyword">FROM</span> Productos) <span class="keyword">AS</span> PromedioGlobal
+<span class="keyword">FROM</span> Productos;</pre>
+                        <table class="res-table">
+                            <tr><th>Nombre</th><th>Precio</th><th>PromedioGlobal</th></tr>
+                            <tr><td>Laptop</td><td>2899.90</td><td>1039.80</td></tr>
+                            <tr><td>Mouse</td><td>89.50</td><td>1039.80</td></tr>
+                        </table>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔹 3. Subconsulta con IN</div>
+                        <div class="req-box">Ver clientes que han hecho pedidos (usando lista de IDs).</div>
+                        <pre><span class="keyword">SELECT</span> Nombre
+<span class="keyword">FROM</span> Clientes
+<span class="keyword">WHERE</span> IdCliente <span class="keyword">IN</span> (<span class="keyword">SELECT</span> IdCliente <span class="keyword">FROM</span> Pedidos);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔹 4. Subconsulta con EXISTS</div>
+                        <div class="req-box">Mostrar solo clientes que tengan al menos un pedido asociado.</div>
+                        <pre><span class="keyword">SELECT</span> Nombre
+<span class="keyword">FROM</span> Clientes C
+<span class="keyword">WHERE EXISTS</span> (
+    <span class="keyword">SELECT</span> 1 <span class="keyword">FROM</span> Pedidos P
+    <span class="keyword">WHERE</span> P.IdCliente = C.IdCliente
+);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔹 5. Subconsulta Correlacionada</div>
+                        <div class="req-box">Mostrar cada cliente con su total gastado (calculado individualmente).</div>
+                        <pre><span class="keyword">SELECT</span> C.Nombre,
+(<span class="keyword">SELECT SUM</span>(Ped.Cantidad * P.Precio)
+ <span class="keyword">FROM</span> Pedidos Ped
+ <span class="keyword">INNER JOIN</span> Productos P <span class="keyword">ON</span> P.IdProducto = Ped.IdProducto
+ <span class="keyword">WHERE</span> Ped.IdCliente = C.IdCliente) <span class="keyword">AS</span> TotalGastado
+<span class="keyword">FROM</span> Clientes C;</pre>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                title: "Agrupaciones y Estadísticas (Avanzado)",
+                content: `
+                    <div class="note-box" style="margin-bottom:20px;"><span class="note-icon">💡</span> <b>Contexto:</b> Reportes de negocio: totales por cliente, por producto, filtros sobre totales.</div>
+
+                    <div class="module">
+                        <div class="module-title">📊 1. Pedidos por Cliente (COUNT + GROUP BY)</div>
+                        <div class="req-box">¿Cuántos pedidos ha hecho cada cliente?</div>
+                        <pre><span class="keyword">SELECT</span> C.Nombre, <span class="keyword">COUNT</span>(Ped.IdPedido) <span class="keyword">AS</span> TotalPedidos
+<span class="keyword">FROM</span> Clientes C
+<span class="keyword">INNER JOIN</span> Pedidos Ped <span class="keyword">ON</span> C.IdCliente = Ped.IdCliente
+<span class="keyword">GROUP BY</span> C.Nombre;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📊 2. Total Gastado por Cliente</div>
+                        <div class="req-box">Sumar (Precio * Cantidad) agrupado por cliente.</div>
+                        <pre><span class="keyword">SELECT</span> C.Nombre, 
+<span class="keyword">SUM</span>(Ped.Cantidad * P.Precio) <span class="keyword">AS</span> TotalGastado
+<span class="keyword">FROM</span> Clientes C
+<span class="keyword">INNER JOIN</span> Pedidos Ped <span class="keyword">ON</span> C.IdCliente = Ped.IdCliente
+<span class="keyword">INNER JOIN</span> Productos P <span class="keyword">ON</span> Ped.IdProducto = P.IdProducto
+<span class="keyword">GROUP BY</span> C.Nombre;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📊 3. Estadísticas Globales</div>
+                        <div class="req-box">Precio promedio, máximo y mínimo de toda la tabla.</div>
+                        <pre><span class="keyword">SELECT</span>
+    <span class="keyword">AVG</span>(Precio) <span class="keyword">AS</span> Promedio,
+    <span class="keyword">MAX</span>(Precio) <span class="keyword">AS</span> Maximo,
+    <span class="keyword">MIN</span>(Precio) <span class="keyword">AS</span> Minimo
+<span class="keyword">FROM</span> Productos;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📊 4. Unidades Vendidas por Producto</div>
+                        <div class="req-box">Sumar cantidades de pedidos agrupado por producto.</div>
+                        <pre><span class="keyword">SELECT</span> P.Nombre, <span class="keyword">SUM</span>(Ped.Cantidad) <span class="keyword">AS</span> TotalUnidades
+<span class="keyword">FROM</span> Productos P
+<span class="keyword">INNER JOIN</span> Pedidos Ped <span class="keyword">ON</span> P.IdProducto = Ped.IdProducto
+<span class="keyword">GROUP BY</span> P.Nombre;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📊 5. Filtrar Grupos con HAVING</div>
+                        <div class="req-box">Mostrar solo productos que se han vendido más de 1 unidad en total.</div>
+                        <pre><span class="keyword">SELECT</span> P.Nombre, <span class="keyword">SUM</span>(Ped.Cantidad) <span class="keyword">AS</span> Total
+<span class="keyword">FROM</span> Productos P
+<span class="keyword">INNER JOIN</span> Pedidos Ped <span class="keyword">ON</span> P.IdProducto = Ped.IdProducto
+<span class="keyword">GROUP BY</span> P.Nombre
+<span class="keyword">HAVING SUM</span>(Ped.Cantidad) > 1;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📊 6. Agrupación Múltiple</div>
+                        <div class="req-box">Qué compró cada cliente de cada producto (Matriz).</div>
+                        <pre><span class="keyword">SELECT</span> C.Nombre, P.Nombre, <span class="keyword">SUM</span>(Ped.Cantidad)
+<span class="keyword">FROM</span> Clientes C
+<span class="keyword">INNER JOIN</span> Pedidos Ped <span class="keyword">ON</span> C.IdCliente = Ped.IdCliente
+<span class="keyword">INNER JOIN</span> Productos P <span class="keyword">ON</span> Ped.IdProducto = P.IdProducto
+<span class="keyword">GROUP BY</span> C.Nombre, P.Nombre;</pre>
+                    </div>
+                `
+            },
+            {
+                id: 8,
+                title: "Modificación de Datos (DML)",
+                content: `
+                    <div class="note-box" style="margin-bottom:20px;"><span class="note-icon">💡</span> <b>Contexto:</b> Empleados de la empresa. Actualización de salarios, bajas y altas.</div>
+
+                    <div class="module">
+                        <div class="module-title">➕ 1. INSERT Avanzado (Múltiples)</div>
+                        <div class="req-box">Insertar 3 nuevos empleados de una sola vez.</div>
+                        <pre><span class="keyword">INSERT INTO</span> Empleados (Nombre, Cargo, Sueldo, IdDepartamento)
+<span class="keyword">VALUES</span>
+(<span class="string">'Laura Medina'</span>, <span class="string">'Desarrolladora'</span>, 4800, 2),
+(<span class="string">'Carlos Ramos'</span>, <span class="string">'Analista'</span>, 5200, 3),
+(<span class="string">'Marta López'</span>, <span class="string">'Diseñadora'</span>, 4700, 2);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔄 2. UPDATE (Aumento de Sueldo)</div>
+                        <div class="req-box">Aumentar el sueldo un 10% a todos los del departamento 2.</div>
+                        <pre><span class="keyword">UPDATE</span> Empleados
+<span class="keyword">SET</span> Sueldo = Sueldo * 1.10
+<span class="keyword">WHERE</span> IdDepartamento = 2;</pre>
+                        <div class="note-box"><span class="note-icon">⚠️</span> Si omites el WHERE, subes el sueldo a <b>TODOS</b> los empleados.</div>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔄 3. UPDATE (Múltiples Campos)</div>
+                        <div class="req-box">Cambiar cargo y sueldo específico a 'Carlos Ramos'.</div>
+                        <pre><span class="keyword">UPDATE</span> Empleados
+<span class="keyword">SET</span> Cargo = <span class="string">'Jefe de Proyecto'</span>, Sueldo = 7000
+<span class="keyword">WHERE</span> Nombre = <span class="string">'Carlos Ramos'</span>;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🗑️ 4. DELETE (Eliminar Fila)</div>
+                        <div class="req-box">Eliminar al empleado 'José Torres'.</div>
+                        <pre><span class="keyword">DELETE FROM</span> Empleados
+<span class="keyword">WHERE</span> Nombre = <span class="string">'José Torres'</span>;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🗑️ 5. DELETE ALL (Peligro)</div>
+                        <div class="req-box">Borrar todo el contenido de la tabla (deja la estructura vacía).</div>
+                        <pre><span class="keyword">DELETE FROM</span> Empleados;</pre>
+                        <div class="note-box"><span class="note-icon">⛔</span> Comando muy peligroso. Úsalo solo para pruebas.</div>
+                    </div>
+                `
+            },
+            {
+                id: 9,
+                title: "Restricciones (Constraints)",
+                content: `
+                    <div class="note-box" style="margin-bottom:20px;"><span class="note-icon">💡</span> <b>Contexto:</b> Crear reglas de negocio para evitar datos incorrectos o inconsistentes.</div>
+
+                    <div class="module">
+                        <div class="module-title">🔒 1. PRIMARY KEY</div>
+                        <div class="req-box">Crear tabla Departamentos con ID único.</div>
+                        <pre><span class="keyword">CREATE TABLE</span> Departamentos (
+    IdDepartamento <span class="keyword">INT PRIMARY KEY</span>,
+    Nombre <span class="keyword">VARCHAR</span>(50) <span class="keyword">NOT NULL</span>,
+    Ciudad <span class="keyword">VARCHAR</span>(50)
+);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🔗 2. FOREIGN KEY</div>
+                        <div class="req-box">Crear tabla Empleados vinculada a Departamentos.</div>
+                        <pre><span class="keyword">CREATE TABLE</span> Empleados (
+    IdEmpleado <span class="keyword">INT PRIMARY KEY</span>,
+    Nombre <span class="keyword">VARCHAR</span>(100) <span class="keyword">NOT NULL</span>,
+    Sueldo <span class="keyword">DECIMAL</span>(10,2),
+    IdDepartamento <span class="keyword">INT</span>,
+    <span class="keyword">FOREIGN KEY</span> (IdDepartamento) 
+    <span class="keyword">REFERENCES</span> Departamentos(IdDepartamento)
+);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🚫 3. UNIQUE (Sin duplicados)</div>
+                        <div class="req-box">Evitar que dos empleados tengan exactamente el mismo nombre.</div>
+                        <pre><span class="keyword">ALTER TABLE</span> Empleados
+<span class="keyword">ADD CONSTRAINT</span> UQ_Nombre <span class="keyword">UNIQUE</span> (Nombre);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">✔️ 4. CHECK (Validación de rango)</div>
+                        <div class="req-box">No permitir sueldos menores a 1200.</div>
+                        <pre><span class="keyword">ALTER TABLE</span> Empleados
+<span class="keyword">ADD CONSTRAINT</span> CHK_Sueldo <span class="keyword">CHECK</span> (Sueldo >= 1200);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">📝 5. DEFAULT (Valor por defecto)</div>
+                        <div class="req-box">Si no se indica cargo, poner "Sin Asignar".</div>
+                        <pre><span class="keyword">ALTER TABLE</span> Empleados
+<span class="keyword">ADD CONSTRAINT</span> DF_Cargo 
+<span class="keyword">DEFAULT</span> <span class="string">'Sin Asignar'</span> <span class="keyword">FOR</span> Cargo;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">🏫 6. Ejemplo Completo (Control Académico)</div>
+                        <div class="req-box">Unir Alumnos, Cursos y Matrículas con todas las reglas.</div>
+                        <pre><span class="keyword">CREATE TABLE</span> Alumnos (
+    IdAlumno <span class="keyword">INT PRIMARY KEY</span>,
+    Nombre <span class="keyword">VARCHAR</span>(100),
+    Edad <span class="keyword">INT CHECK</span> (Edad <span class="keyword">BETWEEN</span> 15 <span class="keyword">AND</span> 60)
+);
+
+<span class="keyword">CREATE TABLE</span> Cursos (
+    IdCurso <span class="keyword">INT PRIMARY KEY</span>,
+    Nombre <span class="keyword">VARCHAR</span>(50) <span class="keyword">UNIQUE</span>,
+    Creditos <span class="keyword">INT DEFAULT</span> 3
+);</pre>
+                    </div>
+                `
+            },
+            {
+                id: 10,
+                title: "Vistas y Funciones",
+                content: `
+                    <div class="note-box" style="margin-bottom:20px;"><span class="note-icon">💡</span> <b>Contexto:</b> Simplificar consultas complejas para el departamento de RRHH.</div>
+
+                    <div class="module">
+                        <div class="module-title">👁️ 1. Crear Vista (VIEW)</div>
+                        <div class="req-box">Guardar un JOIN complejo (Empleado + Departamento) como tabla virtual.</div>
+                        <pre><span class="keyword">CREATE VIEW</span> Vista_EmpleadosDepto <span class="keyword">AS</span>
+<span class="keyword">SELECT</span> E.Nombre <span class="keyword">AS</span> Empleado, E.Cargo, D.NombreDepto <span class="keyword">AS</span> Departamento
+<span class="keyword">FROM</span> Empleados E
+<span class="keyword">INNER JOIN</span> Departamentos D <span class="keyword">ON</span> E.IdDepartamento = D.IdDepartamento;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">👁️ 2. Consultar Vista</div>
+                        <div class="req-box">Usar la vista como si fuera una tabla normal.</div>
+                        <pre><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> Vista_EmpleadosDepto;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">👁️ 3. Modificar Vista (ALTER)</div>
+                        <div class="req-box">Agregar el campo Sueldo a la vista existente.</div>
+                        <pre><span class="keyword">ALTER VIEW</span> Vista_EmpleadosDepto <span class="keyword">AS</span>
+<span class="keyword">SELECT</span> E.Nombre, E.Cargo, E.Sueldo, D.NombreDepto
+<span class="keyword">FROM</span> Empleados E
+<span class="keyword">INNER JOIN</span> Departamentos D <span class="keyword">ON</span> E.IdDepartamento = D.IdDepartamento;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">⚙️ 4. Función Escalar (Calcular Bono)</div>
+                        <div class="req-box">Función que devuelve el 10% del sueldo pasado como parámetro.</div>
+                        <pre><span class="keyword">CREATE FUNCTION</span> fn_CalcularBono(@Sueldo <span class="keyword">DECIMAL</span>(10,2))
+<span class="keyword">RETURNS DECIMAL</span>(10,2)
+<span class="keyword">AS</span>
+<span class="keyword">BEGIN</span>
+    <span class="keyword">RETURN</span> @Sueldo * 0.10;
+<span class="keyword">END</span>;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">⚙️ 5. Usar Función Escalar</div>
+                        <div class="req-box">Mostrar nombre, sueldo y bono calculado.</div>
+                        <pre><span class="keyword">SELECT</span> 
+    Nombre, 
+    Sueldo,
+    dbo.fn_CalcularBono(Sueldo) <span class="keyword">AS</span> Bono
+<span class="keyword">FROM</span> Empleados;</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">⚙️ 6. Función Tabla (Empleados por Depto)</div>
+                        <div class="req-box">Función que devuelve una tabla filtrada de empleados.</div>
+                        <pre><span class="keyword">CREATE FUNCTION</span> fn_EmpleadosPorDepto(@IdDepto <span class="keyword">INT</span>)
+<span class="keyword">RETURNS TABLE</span>
+<span class="keyword">AS</span>
+<span class="keyword">RETURN</span>
+(
+    <span class="keyword">SELECT</span> Nombre, Cargo, Sueldo
+    <span class="keyword">FROM</span> Empleados
+    <span class="keyword">WHERE</span> IdDepartamento = @IdDepto
+);</pre>
+                    </div>
+
+                    <div class="module">
+                        <div class="module-title">⚙️ 7. Usar Función Tabla</div>
+                        <div class="req-box">Obtener empleados del departamento con ID 2.</div>
+                        <pre><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> dbo.fn_EmpleadosPorDepto(2);</pre>
+                    </div>
+                `
+            }
+        ];
+
+        let currentIdx = 0;
+        const totalSlides = classesData.length;
+
+        function render() {
+            const data = classesData[currentIdx];
+            const container = document.getElementById('slide-content');
+            const numDisplay = document.getElementById('curr-num');
+            const prevBtn = document.getElementById('btn-prev');
+            const nextBtn = document.getElementById('btn-next');
+
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
+
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="class-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; border-bottom:2px dashed #eee; padding-bottom:15px;">
+                        <h1 class="class-title" style="font-size:2.2rem; color:var(--primary);">Clase ${data.id}: ${data.title}</h1>
+                        <span class="class-badge" style="background:var(--secondary); color:white; padding:5px 15px; border-radius:5px; font-size:0.9rem; text-transform:uppercase;">Curso SQL Server</span>
+                    </div>
+                    ${data.content}
+                `;
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 200);
+
+            numDisplay.textContent = data.id;
+            prevBtn.disabled = currentIdx === 0;
+            nextBtn.disabled = currentIdx === totalSlides - 1;
+        }
+
+        function nav(direction) {
+            const newIdx = currentIdx + direction;
+            if (newIdx >= 0 && newIdx < totalSlides) {
+                currentIdx = newIdx;
+                render();
+            }
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>

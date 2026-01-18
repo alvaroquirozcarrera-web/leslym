@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 11: SQL Server — Procedimientos Almacenados (Stored Procedures)</title>
+    <style>
+        /* --- VARIABLES CSS & RESET --- */
+        :root {
+            --primary-color: #0078d4; /* Azul SQL Server */
+            --secondary-color: #2d2d2d;
+            --accent-color: #e1f5fe;
+            --text-color: #333333;
+            --bg-color: #f8f9fa;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --number: #b5cea8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --spacing: 2rem;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* --- LAYOUT GENERAL --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: var(--white);
+            padding: 3rem 0 4rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- BOTÓN DE NAVEGACIÓN --- */
+        .nav-bar { margin-top: 2rem; text-align: right; }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f8ff;
+        }
+
+        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary-color); margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h3 { margin-bottom: 1rem; color: var(--secondary-color); }
+        h4 { margin-bottom: 0.5rem; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* --- SECCIONES Y TARJETAS --- */
+        section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .intro-list {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .intro-list li {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .context-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+
+        /* --- COMPONENTE: PREGUNTA - CÓDIGO - RESPUESTA --- */
+        .lesson-step {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-step:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .step-header {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-badge {
+            background: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .step-content { padding: 1.5rem; }
+        .question-box { margin-bottom: 1rem; font-style: italic; font-size: 1.1rem; color: #555; }
+
+        /* --- WRAPPER Y BOTÓN DE COPIAR --- */
+        .code-wrapper { position: relative; margin-bottom: 1.5rem; }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
+            opacity: 0.7; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .copy-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.2); }
+        .copy-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .copy-btn.copied { background-color: #28a745; border-color: #28a745; opacity: 1; }
+
+        /* --- BLOQUES DE CÓDIGO --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem; padding-top: 2.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+        }
+
+        /* Sintaxis SQL */
+        .kw { color: var(--keyword); font-weight: bold; }
+        .str { color: var(--string); }
+        .num { color: var(--number); }
+        .type { color: #4ec9b0; }
+        .func { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+        
+        /* Estilos específicos */
+        .pk { color: #d7ba7d; } /* PRIMARY KEY en morado */
+        .fk { color: #d08070; } /* FOREIGN KEY en rojo */
+        .uq { color: #ff00ff; } /* UNIQUE en morado */
+        .out { color: #4ec9b0; } /* OUTPUT keyword */
+
+        /* --- EXPLICACIÓN Y TABLAS --- */
+        .explanation {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-table-wrapper { overflow-x: auto; margin-top: 1rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: var(--primary-color); color: var(--white); }
+        tr:nth-child(even) { background-color: var(--bg-color); }
+
+        /* Subtítulos internos */
+        .sub-example-title {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: block;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* --- ALERTAS --- */
+        .warning-box {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+        }
+
+        /* --- RESUMEN FINAL --- */
+        .summary-table th, .summary-table td { border: 1px solid #ddd; }
+        code.inline { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d63384; }
+
+        footer {
+            text-align: center; padding: 2rem; color: #666; font-size: 0.9rem;
+            border-top: 1px solid #eee; margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .nav-bar { text-align: center; margin-top: 1.5rem; }
+            .step-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Clase 11 de 14 — Procedimientos Almacenados (Stored Procedures)</h1>
+            <p>🎯 Procedimientos Almacenados y Funciones Personalizadas</p>
+
+            <!-- BOTÓN DE NAVEGACIÓN -->
+            <div class="nav-bar">
+                <a href="12_SQL.HTML" class="nav-btn">
+                    Ir a Siguiente Clase (Clase 12)
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Objetivos -->
+        <section id="objetivos">
+            <h2>Objetivo de la clase</h2>
+            <ul class="intro-list">
+                <li>Crear procedimientos almacenados (CREATE PROCEDURE)</li>
+                <li>Usar parámetros (INPUT, OUTPUT)</li>
+                <li>Modificar y eliminar procedimientos (ALTER, DROP)</li>
+                <li>Aplicar a casos reales de empresa</li>
+            </ul>
+        </section>
+
+        <!-- Contexto -->
+        <div class="context-box">
+            <h3>🏢 Contexto real: Empresa Global</h3>
+            <p>Segues trabajando con la base de datos Empresa Global. Ahora los analistas necesitan ejecutar las mismas consultas todos los días (reportes de ventas, stock, etc.). En lugar de escribir el código SQL cada mañana, crearemos procedimientos (Stored Procedures) para automatizar el trabajo.</p>
+        </div>
+
+        <!-- Paso 1: Conceptos Básicos -->
+        <section>
+            <h2>🔹 1. ¿Qué es un Stored Procedure?</h2>
+            <p>Un procedimiento es un bloque de código SQL guardado que podemos reutilizar las veces que queramos.</p>
+            <br>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Desripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Stored Procedure (SP)</strong></td>
+                            <td>Guarda código complejo en el servidor. No necesita escribirlo cada vez.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>View (Vista)</strong></td>
+                            <td>Consulta guardada. Se usa para simplificar consultas complejas.</td>
+                        </tr>
+                        <td colspan="2"><em>Nota:</em> Un SP puede devolver una tabla, un número o nada.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Function (Función)</strong></td>
+                            <td>Realiza cálculos complejos y devuelve un único valor (ej. el bono de un empleado).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Paso 2: SP Básico -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 2</span> Crear Procedimiento Básico (Sin Parámetros)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El área de RRHH necesita una lista rápida de empleados con su cargo y sueldo. Crea un SP para ello.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE PROCEDURE</span> sp_ListarEmpleados
+<span class="kw">AS</span>
+BEGIN
+    <span class="kw">SELECT</span> Nombre, Cargo, Sueldo
+    <span class="kw">FROM</span> Empleados;
+<span class="kw">END</span></code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>CREATE PROCEDURE</code> → Crea el objeto.</li>
+                        <li><code>sp_ListarEmpleados</code> → Nombre del procedimiento.</li>
+                        <li><code>BEGIN...END</code> → Define el cuerpo del procedimiento.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 3: SP con Parámetros (WHERE) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 3</span> Procedimiento con Parámetros de Entrada (INPUT)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Queremos una lista dinámica. El usuario ingresa un salario mínimo y nosotros mostramos los que ganan más de eso.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE PROCEDURE</span> sp_EmpleadosPorSueldo
+    @SueldoMin <span class="type">DECIMAL</span>(10,2)
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> Nombre, Cargo, Sueldo
+    <span class="kw">FROM</span> Empleados
+    <span class="kw">WHERE</span> Sueldo > @SueldoMin;
+<span class="kw">END</span>;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>@SueldoMin</code> → Es un <strong>parámetro de entrada</strong>. Puedes cambiarlo al ejecutar.</li>
+                        <li><code>WHERE Sueldo > @SueldoMin</code> → Filtra los resultados.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 4: Ejecutar SP -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 4</span> Ejecutar el Procedimiento (EXEC)</span>
+            </div>
+            <div class="step-content">
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">EXEC</span> sp_EmpleadosPorSueldo @SueldoMin = <span class="num">5000.00</span>;</code></pre>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 5: Modificar SP (ALTER) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 5</span> Modificar Procedimiento (ALTER PROCEDURE)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El área de RRHH ahora quiere que la lista incluya también el sueldo.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">ALTER PROCEDURE</span> sp_ListarEmpleados
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> Nombre, Cargo, Sueldo
+    <span class="kw">FROM</span> Empleados;
+<span class="kw">END</span>;</code></pre>
+                </div>
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <li><code>ALTER PROCEDURE sp_ListarEmpleados</code> → Reemplaza el código antiguo por el nuevo (el que incluye `Sueldo`).</li>
+                    <li>Ahora se puede usar <code>EXEC sp_ListarEmpleados;</code> y ver la tabla actualizada con los sueldos.</li>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 6: SP de Inserción -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 6</span> Procedimiento para Insertar Registros (Input)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El jefe contrató a un nuevo empleado (Daniel Rojas). Crea un SP para insertarlo sin escribir el `INSERT INTO` cada vez.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE PROCEDURE</span> sp_InsertarEmpleado
+    @Nombre <span class="kw type">VARCHAR</span>(50),
+    @Cargo <span class="kw type">VARCHAR</span>(50),
+    @Sueldo <span class="kw type">DECIMAL</span>(10,2),
+    @IdDepartamento <span class="kw type">INT</span>
+<span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">INSERT INTO</span> Empleados (Nombre, Cargo, Sueldo, IdDepartamento)
+    <span class="kw">VALUES</span> (@Nombre, @Cargo, @Sueldo, @IdDepartamento);
+<span class="kw">END</span>;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <li><code>INSERT INTO ... VALUES (@Nombre...)</code> → Usa las variables como valores.</li>
+                    <li>Es mucho más seguro y limpio que escribir <code>INSERT INTO Empleados ... VALUES ('Daniel', ...)</code> manualmente.</li>
+                </div>
+
+                <!-- Uso del SP -->
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Cargo</th><th>Sueldo</th><th>IdDepartamento</th></tr></thead>
+                        <tbody>
+                            <tr><td><em>(Nuevo...)</em></td><td><td><em>(Nuevo...)</em></td><td><td><em>(Nuevo...)</em></td><td><td>2</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 7: SP con OUTPUT -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 7</span> Procedimiento con Salida (OUTPUT)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El gerente quiere saber cuántos empleados hay en cada departamento, sin contar filas en Excel.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE PROCEDURE</span> sp_ContarEmpleadosDepto
+    @IdDepto <span class="kw type">INT</span>,
+    @Cantidad <span class="kw">INT</span> <span class="kw">OUTPUT</span>
+<span class="kw">AS</span>
+BEGIN
+    <span class="kw">SELECT</span> @Cantidad
+    <span class="kw">FROM</span> Empleados
+    <span class="kw">WHERE</span> IdDepartamento = @IdDepto;
+<span class="kw">END</span>;</code></pre>
+                </div>
+
+                <!-- Ejemplo de Uso -->
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">DECLARE</span> @Resultado <span class="kw type">INT</span>;
+
+<span class="kw">EXEC</span> sp_ContarEmpleadosDepto @IdDepto = 2, @Resultado = @Resultado OUTPUT;
+
+<span class="kw">SELECT</span> @Resultado <span class="kw">AS</span> EmpleadosEnDepto;
+<span class="kw">GO</span></code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>OUTPUT @Cantidad OUTPUT</code> → Guarda el conteo en la variable de salida.</li>
+                        <li><code>SELECT @Resultado OUTPUT</code> → Muestra el valor del parámetro.</li>
+                        <li>Es ideal para obtener valores de cálculos sin devolver tablas completas innecesarias.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 8: SP que Devuelve Tabla -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 8</span> Procedimiento Devuelve Tabla</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El gerente quiere una tabla automática de empleados por departamento sin escribir el JOIN cada vez.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE FUNCTION</span> fn_EmpleadosPorDepto (@IdDepto <span class="kw type">INT</span>)
+<span class="kw">RETURNS</span> <span class="kw">TABLE</span>
+<span class="kw">AS</span>
+<span class="kw">RETURNS</span> <span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> Nombre, Cargo, Sueldo
+    <span class="kw">FROM</span> Empleados
+    <span class="kw">WHERE</span> IdDepartamento = @IdDepto;
+<span class="kw">END</span>;</code></pre>
+                </div>
+
+                <!-- Ejemplo de Uso -->
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="func">fn_EmpleadosPorDepto</span>(<span class="num">2</span>) <span class="kw">AS</span> EmpleadosEnDepto;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <li>Una <code>FUNCTION</code> que devuelve una <strong>Tabla (RETURN TABLE)</strong> es muy potente. Escribir una sola vez y obtienes los resultados como si fuera un <code>SELECT</code> normal.</li>
+                    <li>A diferencia de la Vista (View), la función permite pasar parámetros dinámicos (como <code>@IdDepto</code>) para filtrar la tabla en la ejecución.</li>
+                </div>
+            </div>
+        </article>
+
+        <!-- Paso 9: Eliminar SP -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 9</span> Eliminar Procedimiento (DROP)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Ya no necesitamos el procedimiento viejo de lista de empleados.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">DROP PROCEDURE</span> sp_ListarEmpleados;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <li><code>DROP PROCEDURE</code> borra el procedimiento del servidor. Ya no podrás ejecutar <code>EXEC sp_ListarEmpleados</code>.</li>
+                    <li>Es muy útil para limpiar código antiguo o hacer cambios de versión.</li>
+                </div>
+            </div>
+        </article>
+
+        <!-- Resumen -->
+        <section>
+            <h2>🧾 Resumen de la Clase 11</h2>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Comando SQL</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>CREATE PROCEDURE</strong></td>
+                            <td><code>CREATE PROCEDURE spNombre ...</code></td>
+                            <td>Crea el procedimiento en la base de datos.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>EXECUTE</strong></td>
+                            <td><code>EXEC sp_Ejemplo @Parametro</code></td>
+                            <td>Se usa para correr el procedimiento con un parámetro.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ALTER PROCEDURE</strong></td>
+                            <td><code>ALTER PROCEDURE sp_Ejemplo ... BEGIN ... END</code></td>
+                            <td>Modifica el contenido del procedimiento.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DROP PROCEDURE</strong></td>
+                            <td><code>DROP PROCEDURE sp_Ejemplo;</code></td>
+                            <td>Elimina el procedimiento permanentemente.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <h4>✅ Has aprendido a:</h4>
+            <ul>
+                <li>Crear procedimientos para automatizar tareas repetitivas.</li>
+                <li>Usar parámetros para hacer las consultas dinámicas.</li>
+                <li>Utilizar OUTPUT para obtener contadores y cálculos rápidos.</li>
+                <li>Gestionar el ciclo de vida del código (CREAR, ALTER, DROP).</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Curso de SQL Server - Clase 11</p>
+    </footer>
+
+    <!-- SCRIPT PARA COPIAR CÓDIGO -->
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const textToCopy = code.innerText;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Hubo un error al intentar copiar el código.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

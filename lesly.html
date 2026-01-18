@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Universidades | HTML + CSS + JS</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(120deg, #667eea, #764ba2);
+            color: #333;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        body.dark {
+            background: #121212;
+            color: #f1f1f1;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px;
+            color: white;
+        }
+
+        .contenedor {
+            max-width: 1100px;
+            margin: -30px auto 40px;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        body.dark .card {
+            background: #1e1e1e;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .contador {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        .mensaje {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .oculto {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🎓 Universidades</h1>
+    <p>HTML + CSS + JavaScript (JS que sí se nota)</p>
+</header>
+
+<div class="contenedor">
+
+    <!-- Tema -->
+    <div class="card">
+        <h2>🎨 Cambiar tema</h2>
+        <button onclick="cambiarTema()">Modo claro / oscuro</button>
+    </div>
+
+    <!-- Contador -->
+    <div class="card">
+        <h2>📊 Contador de universidades</h2>
+        <div class="contador" id="contador">0</div>
+        <button onclick="aumentar()">Agregar universidad</button>
+        <button onclick="reiniciar()">Reiniciar</button>
+    </div>
+
+    <!-- Mostrar / ocultar -->
+    <div class="card">
+        <h2>👀 Mostrar / ocultar información</h2>
+        <button onclick="toggleInfo()">Ver universidades del Perú</button>
+
+        <ul id="info" class="oculto">
+            <li>UNMSM</li>
+            <li>UNI</li>
+            <li>UPC</li>
+            <li>PUCP</li>
+        </ul>
+    </div>
+
+    <!-- Formulario -->
+    <div class="card">
+        <h2>📝 Formulario con validación</h2>
+
+        <label>Nombre</label>
+        <input type="text" id="nombre">
+
+        <label>Correo</label>
+        <input type="email" id="correo">
+
+        <button onclick="validarFormulario()">Enviar</button>
+
+        <div class="mensaje" id="mensaje"></div>
+    </div>
+
+    <!-- Mensaje dinámico -->
+    <div class="card">
+        <h2>⚡ Mensaje en tiempo real</h2>
+        <button onclick="saludar()">Saludar</button>
+        <p id="saludo"></p>
+    </div>
+
+</div>
+
+<script>
+    // Tema oscuro / claro
+    function cambiarTema() {
+        document.body.classList.toggle("dark");
+    }
+
+    // Contador
+    let total = 0;
+
+    function aumentar() {
+        total++;
+        document.getElementById("contador").textContent = total;
+    }
+
+    function reiniciar() {
+        total = 0;
+        document.getElementById("contador").textContent = total;
+    }
+
+    // Mostrar / ocultar
+    function toggleInfo() {
+        const info = document.getElementById("info");
+        info.classList.toggle("oculto");
+    }
+
+    // Validación de formulario
+    function validarFormulario() {
+        const nombre = document.getElementById("nombre").value;
+        const correo = document.getElementById("correo").value;
+        const mensaje = document.getElementById("mensaje");
+
+        if (nombre === "" || correo === "") {
+            mensaje.textContent = "❌ Completa todos los campos";
+            mensaje.style.color = "red";
+        } else {
+            mensaje.textContent = "✅ Formulario enviado correctamente";
+            mensaje.style.color = "green";
+        }
+    }
+
+    // Mensaje dinámico
+    function saludar() {
+        document.getElementById("saludo").textContent =
+            "👋 Bienvenido al sistema de universidades";
+    }
+</script>
+
+</body>
+</html>

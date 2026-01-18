@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 15 de 15 — ¡Curso Completado!</title>
+    <style>
+        /* --- VARIABLES CSS & RESET --- */
+        :root {
+            --primary-color: #0078d4; /* Azul SQL Server */
+            --secondary-color: #2d2d2d;
+            --accent-color: #e1f5fe;
+            --text-color: #333333;
+            --bg-color: #f8f9fa;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --number: #b5cea8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --spacing: 2rem;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* --- LAYOUT GENERAL --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: var(--white);
+            padding: 3rem 0 4rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- BOTÓN DE NAVEGACIÓN --- */
+        .nav-bar { margin-top: 2rem; text-align: right; }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f8ff;
+        }
+
+        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary-color); margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h3 { margin-bottom: 1rem; color: var(--secondary-color); }
+        h4 { margin-bottom: 0.5rem; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* --- SECCIONES Y TARJETAS --- */
+        section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .intro-list {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .intro-list li {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .context-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            margin-bottom:  2rem;
+            border-radius: 4px;
+        }
+
+        /* --- COMPONENTE: PREGUNTA - CÓDIGO - RESPUESTA --- */
+        .lesson-step {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-step:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .step-header {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-badge {
+            background: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .step-content { padding: 1.5rem; }
+        .question-box { margin-bottom: 1rem; font-style: italic; font-size: 1.1rem; color: #555; }
+
+        /* --- WRAPPER Y BOTÓN DE COPIAR --- */
+        .code-wrapper { position: relative; margin-bottom: 1.5rem; }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
+            opacity: 0.7; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .copy-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.2); }
+        .copy-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .copy-btn.copied { background-color: #28a745; border-color: #28a745; opacity: 1; }
+
+        /* --- BLOQUES DE CÓDIGO --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem; padding-top: 2.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+        }
+
+        /* Sintaxis SQL */
+        .kw { color: var(--keyword); font-weight: bold; }
+        .str { color: var(--string); }
+        .num { color: var(--number); }
+        .type { color: #4ec9b0; }
+        .func { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+
+        /* --- EXPLICACIÓN Y TABLAS --- */
+        .explanation {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-table-wrapper { overflow-x: auto; margin-top: 1rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: var(--primary-color); color: var(--white); }
+        tr:nth-child(even) { background-color: var(--bg-color); }
+
+        /* Subtítulos internos */
+        .sub-example-title {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            display: block;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 5px;
+        }
+
+        /* --- DIPLOMA --- */
+        .diploma-container {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            background-color: #e3f2fd; /* Color muy claro para resaltar */
+            border: 2px solid var(--primary-color);
+            border-radius: var(--radius);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 8px 16px rgba(0, 0,0,0.1);
+        }
+
+        .diploma-img {
+            width: 100%;
+            max-width: 400px;
+            display: block;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .diploma-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .diploma-note {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* --- RESUMEN FINAL --- */
+        .summary-table th, .summary-table td { border: 1px solid #ddd; }
+        code.inline { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d63384; }
+
+        footer {
+            text-align: center; padding: 2rem; color: #666; font-size: 0.9rem;
+            border-top: 1px solid #eee; margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .nav-bar { text-align: center; margin-top: 1.5rem; }
+            .step-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Clase 15 de 15 — ¡Curso Completado! 🎓</h1>
+            <p>🎓 Eres un Analista de Datos Junior en TechMarket.</p>
+
+            <!-- BOTÓN DE NAVEGACIÓN FINAL (IR AL INICIO) -->
+            <div class="nav-bar">
+                <a href="index.html" class="nav-btn">
+                    🏠 Volver al Inicio
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-8H4v8h2v8l2 2-2 2v2h2v8h2v2l2-2 2-2-2 2v-2 2 8h2v8l2 2-2 2v2h2v8h8l-2 2-2z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Objetivos -->
+        <section id="objetivos">
+            <h2>Objetivo de la clase</h2>
+            <ul class="intro-list">
+                <li>🎊 Revisar conceptos clave</li>
+                <li>🛠️ Revisar Seguridad y Permisos</li>
+                <li>📊 Ver tu diploma oficial</li>
+                <li>🚀 Prepararse para el mundo laboral</li>
+            </ul>
+        </section>
+
+        <!-- Diploma Section -->
+        <div class="diploma-container">
+            <!-- Imagen de Diploma (Placeholder) -->
+            <img src="https://images.unsplash.com/photo-1544153279-1e26a4a8-8e1f4-9b2c9a0-2e4830?auto=format&fit=crop&w=600&q=80" alt="Diploma SQL Server" class="diploma-img">
+            <div class="diploma-title">🧾 Diploma de Graduación</div>
+            <p class="diploma-note">Certificado: <strong>Analista de Datos Junior en TechMarket</strong></p>
+            <p style="font-size: 0.9em; color: #666;">Título de la carrera: <strong>Flores Lesly Katerine</strong></p>
+        </div>
+
+        <!-- Resumen de las Clases -->
+        <section>
+            <h2>🧾 Repaso General del Curso</h2>
+            <p>Has completado el curso SQL Server. ¡Felicitaciones!</p>
+            <br>
+            <p>Aquí tienes las herramientas necesarias para crear bases de datos robustas, realizar consultas complejas y gestionar la información con seguridad.</p>
+            <br>
+            <p><strong>Recordemos las 14 Clases:</strong></p>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <th>Clase</th>
+                        <th>Tema Principal</th>
+                        <th>Resultado Clave</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Clase 1-5</strong></td>
+                            <td>Fundamentos y SELECT</td>
+                            <td>Saber pedir datos a la base de datos.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clase 6-10</strong></td>
+                            <td>Consultas Avanzadas y JOINs</td>
+                            <td>Saber unir tablas complejas (Clientes + Productos).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clase 11-13</strong></td>
+                            <td>Objetos, Funciones y Triggers</td>
+                            <td>Automatizar tareas y controlar calidad.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clase 14</strong></td>
+                            <td>Seguridad y Optimización</td>
+                            <td>Bases de datos rápidas y seguras.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <p><strong>🎓 Tu siguiente paso:</strong></p>
+            <p>Con estos conocimientos, puedes crear soluciones para grandes empresas como TechMarket.</p>
+            <ul style="background-color: #e1f5fe; border-radius: 8px; padding-left: 1.5rem;">
+                <li>✅ Desarrollador de SQL Server</li>
+                <li>✅ Analista de Datos</li>
+                <li>✅ Administrador de Bases de Datos</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Curso de SQL Server - Clase 15 de 15 (Final)</p>
+    </footer>
+
+    <!-- SCRIPT PARA COPIAR CÓDIGO -->
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const textToCopy = code.innerText;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Hubo un error al intentar copiar el código.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

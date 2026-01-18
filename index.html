@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 1: SQL Server Fundamentos</title>
+    <style>
+        /* --- VARIABLES CSS & RESET --- */
+        :root {
+            --primary-color: #0078d4; /* Azul SQL Server */
+            --secondary-color: #2d2d2d;
+            --accent-color: #e1f5fe;
+            --text-color: #333333;
+            --bg-color: #f8f9fa;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --number: #b5cea8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --spacing: 2rem;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* --- LAYOUT GENERAL --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: var(--white);
+            padding: 3rem 0 4rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- BOTÓN DE NAVEGACIÓN --- */
+        .nav-bar { margin-top: 2rem; text-align: right; }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f8ff;
+        }
+
+        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary-color); margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h3 { margin-bottom: 1rem; color: var(--secondary-color); }
+        h4 { margin-bottom: 0.5rem; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* --- SECCIONES Y TARJETAS --- */
+        section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .intro-list {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .intro-list li {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .context-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+
+        /* --- COMPONENTE: PREGUNTA - CÓDIGO - RESPUESTA --- */
+        .lesson-step {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-step:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .step-header {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-badge {
+            background: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .step-content { padding: 1.5rem; }
+        .question-box { margin-bottom: 1rem; font-style: italic; font-size: 1.1rem; color: #555; }
+
+        /* --- WRAPPER Y BOTÓN DE COPIAR --- */
+        .code-wrapper { position: relative; margin-bottom: 1.5rem; }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
+            opacity: 0.7; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .copy-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.2); }
+        .copy-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .copy-btn.copied { background-color: #28a745; border-color: #28a745; opacity: 1; }
+
+        /* --- BLOQUES DE CÓDIGO --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem; padding-top: 2.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+        }
+
+        /* Sintaxis SQL */
+        .kw { color: var(--keyword); font-weight: bold; }
+        .str { color: var(--string); }
+        .num { color: var(--number); }
+        .type { color: #4ec9b0; }
+        .func { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+
+        /* --- EXPLICACIÓN Y TABLAS --- */
+        .explanation {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-table-wrapper { overflow-x: auto; margin-top: 1rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: var(--primary-color); color: var(--white); }
+        tr:nth-child(even) { background-color: var(--bg-color); }
+
+        /* --- RESUMEN FINAL --- */
+        .summary-table th, .summary-table td { border: 1px solid #ddd; }
+        code.inline { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d63384; }
+
+        footer {
+            text-align: center; padding: 2rem; color: #666; font-size: 0.9rem;
+            border-top: 1px solid #eee; margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .nav-bar { text-align: center; margin-top: 1.5rem; }
+            .step-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Clase 1 de SQL Server</h1>
+            <p>🎯 Fundamentos y Primeros Comandos</p>
+
+            <!-- BOTÓN DE NAVEGACIÓN -->
+            <div class="nav-bar">
+                <a href="2_SQL.HTML" class="nav-btn">
+                    Ir a Siguiente Clase (Clase 2)
+                    <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Objetivos -->
+        <section id="objetivos">
+            <h2>Objetivo de la clase</h2>
+            <ul class="intro-list">
+                <li>Entender qué es SQL Server</li>
+                <li>Aprender comandos básicos (CREATE, INSERT, SELECT)</li>
+                <li>Aplicarlo en un caso real</li>
+            </ul>
+        </section>
+
+        <!-- Contexto -->
+        <div class="context-box">
+            <h3>🏢 Contexto real: Empresa “TechMarket”</h3>
+            <p>Imagina que trabajas como analista de datos junior en una empresa llamada TechMarket, que vende productos tecnológicos. Tu jefe te pide crear una pequeña base de datos para registrar sus productos.</p>
+        </div>
+
+        <!-- PASO 1: Concepto -->
+        <section>
+            <h2>🔹 1. ¿Qué es SQL Server?</h2>
+            <p>SQL Server es un sistema que guarda y organiza información para que puedas consultarla, modificarla o analizarla fácilmente usando un lenguaje llamado SQL (Structured Query Language).</p>
+            <br>
+            <p><strong>📦 Piensa en él como una gran biblioteca digital:</strong></p>
+            <ul>
+                <li>✅ Cada <strong>base de datos</strong> es como una “sección”.</li>
+                <li>✅ Cada <strong>tabla</strong> es como una “estantería”.</li>
+                <li>✅ Cada <strong>fila (row)</strong> es un “libro” o registro.</li>
+                <li>✅ Cada <strong>columna (column)</strong> es una “característica del libro”.</li>
+            </ul>
+        </section>
+
+        <!-- PASO 2: Crear DB -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 2</span> Crear tu primera base de datos</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> ¿Cuál es el comando para crear una nueva base de datos vacía llamada TechMarket?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE DATABASE</span> TechMarket;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <h4>🧩 Explicación:</h4>
+                    <ul>
+                        <li><code>CREATE DATABASE</code> → Orden para crear una nueva base de datos.</li>
+                        <li><code>TechMarket</code> → Es el nombre que le asignamos a la base.</li>
+                    </ul>
+                    <p><strong>💡 Resultado:</strong> Se crea una base vacía lista para usar.</p>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 3: Crear Tabla -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 3</span> Crear una tabla (productos)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Dentro de la base TechMarket, ¿cómo definimos la estructura de la tabla "Productos"?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">USE</span> TechMarket;
+<span class="kw">GO</span>
+
+<span class="kw">CREATE TABLE</span> Productos (
+    IdProducto <span class="type">INT</span> <span class="kw">PRIMARY KEY</span>,
+    Nombre <span class="type">VARCHAR</span>(50),
+    Categoria <span class="type">VARCHAR</span>(30),
+    Precio <span class="type">DECIMAL</span>(10,2),
+    Stock <span class="type">INT</span>
+);</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <h4>🧩 Explicación:</h4>
+                    <ul>
+                        <li><code>USE TechMarket;</code> → Indica que todos los comandos siguientes se ejecutan dentro de esa base.</li>
+                        <li><code>CREATE TABLE Productos</code> → Crea la tabla llamada Productos.</li>
+                        <li><code>IdProducto INT PRIMARY KEY</code> → Columna de números enteros que será el identificador único.</li>
+                        <li><code>VARCHAR(50)</code> → Tipo de texto con un máximo de 50 caracteres.</li>
+                        <li><code>DECIMAL(10,2)</code> → Número con decimales (ej. 1299.99).</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 4: Insertar Registros -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 4</span> Insertar registros (agregar datos)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> ¿Cómo agregamos los primeros 3 productos a la tabla?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">INSERT INTO</span> Productos (IdProducto, Nombre, Categoria, Precio, Stock)
+<span class="kw">VALUES</span> 
+(<span class="num">1</span>, <span class="str">'Laptop Lenovo'</span>, <span class="str">'Computadoras'</span>, <span class="num">2899.90</span>, <span class="num">15</span>),
+(<span class="num">2</span>, <span class="str">'Mouse Logitech'</span>, <span class="str">'Accesorios'</span>, <span class="num">89.50</span>, <span class="num">50</span>),
+(<span class="num">3</span>, <span class="str">'Teclado Redragon'</span>, <span class="str">'Accesorios'</span>, <span class="num">129.99</span>, <span class="num">30</span>);</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <h4>🧩 Explicación:</h4>
+                    <ul>
+                        <li><code>INSERT INTO</code> → Comando para insertar datos.</li>
+                        <li><code>VALUES</code> → Contiene los valores reales.</li>
+                        <li><strong>Importante:</strong> Cada paréntesis <code>(...)</code> representa una fila nueva.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 5: Ver Datos -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 5</span> Ver los datos guardados</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> ¿Cuál es el comando para consultar todo lo que acabamos de guardar?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> * <span class="kw">FROM</span> Productos;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <h4>🧩 Explicación:</h4>
+                    <ul>
+                        <li><code>SELECT</code> → Palabra clave para consultar.</li>
+                        <li><code>*</code> → Significa "todas las columnas".</li>
+                        <li><code>FROM Productos</code> → Especifica la tabla origen.</li>
+                    </ul>
+                </div>
+
+                <!-- Resultado Visual -->
+                <h4>📋 Resultado esperado:</h4>
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>IdProducto</th>
+                                <th>Nombre</th>
+                                <th>Categoria</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Laptop Lenovo</td>
+                                <td>Computadoras</td>
+                                <td>2899.90</td>
+                                <td>15</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Mouse Logitech</td>
+                                <td>Accesorios</td>
+                                <td>89.50</td>
+                                <td>50</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Teclado Redragon</td>
+                                <td>Accesorios</td>
+                                <td>129.99</td>
+                                <td>30</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- Mini Ejercicio -->
+        <section class="exercise-section" style="background-color: #e3f2fd; border: 2px dashed var(--primary-color);">
+            <h2>🧩 6. Mini ejercicio guiado</h2>
+            <p>Pon a prueba tus conocimientos. Intenta resolverlo antes de ver la solución.</p>
+            <br>
+            <h3>Instrucciones:</h3>
+            <ol>
+                <li>Crea otra tabla llamada <strong>Clientes</strong>.</li>
+                <li>Usa estas columnas:
+                    <ul>
+                        <li>IdCliente (clave principal)</li>
+                        <li>Nombre</li>
+                        <li>Ciudad</li>
+                        <li>Email</li>
+                    </ul>
+                </li>
+                <li>Inserta dos clientes ficticios.</li>
+                <li>Muestra su información con <code>SELECT</code>.</li>
+            </ol>
+        </section>
+
+        <!-- Resumen -->
+        <section>
+            <h2>🧾 Resumen de la Clase 1</h2>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Qué aprendiste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Qué es SQL Server</strong></td>
+                            <td>Es un sistema que almacena, organiza y gestiona datos.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Crear base de datos</strong></td>
+                            <td><code>CREATE DATABASE TechMarket;</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Crear tablas</strong></td>
+                            <td><code>CREATE TABLE Productos (...);</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Insertar datos</strong></td>
+                            <td><code>INSERT INTO ... VALUES (...);</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Consultar datos</strong></td>
+                            <td><code>SELECT * FROM Productos;</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Curso de SQL Server - Clase 1</p>
+    </footer>
+
+    <!-- SCRIPT PARA COPIAR CÓDIGO -->
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const textToCopy = code.innerText;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Hubo un error al intentar copiar el código.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

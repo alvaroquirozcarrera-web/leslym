@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clase 14 de 14 — Optimización, Índices y Seguridad Básica</title>
+    <style>
+        /* --- VARIABLES CSS & RESET --- */
+        :root {
+            --primary-color: #0078d4; /* Azul SQL Server */
+            --secondary-color: #2d2d2d;
+            --accent-color: #e1f5fe;
+            --text-color: #333333;
+            --bg-color: #f8f9fa;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+            --keyword: #569cd6;
+            --string: #ce9178;
+            --number: #b5cea8;
+            --white: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --spacing: 2rem;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+
+        /* --- LAYOUT GENERAL --- */
+        .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #005a9e);
+            color: var(--white);
+            padding: 3rem 0 4rem 0; 
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        /* --- BOTÓN DE NAVEGACIÓN --- */
+        .nav-bar { margin-top: 2rem; text-align: right; }
+
+        .nav-btn {
+            background-color: var(--white);
+            color: var(--primary-color);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #f0f8ff;
+        }
+
+        .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { color: var(--primary-color); margin-bottom: 1.5rem; border-bottom: 2px solid var(--accent-color); padding-bottom: 0.5rem; }
+        h3 { margin-bottom: 1rem; color: var(--secondary-color); }
+        h4 { margin-bottom: 0.5rem; color: var(--primary-color); font-size: 1.1rem; }
+
+        /* --- SECCIONES Y TARJETAS --- */
+        section {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .intro-list {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .intro-list li {
+            background: var(--accent-color);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .context-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+        }
+
+        /* --- COMPONENTE: PREGUNTA - CÓDIGO - RESPUESTA --- */
+        .lesson-step {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            margin-bottom: 2.5rem;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+        }
+
+        .lesson-step:hover { transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+
+        .step-header {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            padding: 1rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .step-badge {
+            background: var(--primary-color);
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+
+        .step-content { padding: 1.5rem; }
+        .question-box { margin-bottom: 1rem; font-style: italic; font-size: 1.1rem; color: #555; }
+
+        /* --- WRAPPER Y BOTÓN DE COPIAR --- */
+        .code-wrapper { position: relative; margin-bottom: 1.5rem; }
+
+        .copy-btn {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,255,255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff; border-radius: 4px;
+            padding: 5px 8px; cursor: pointer;
+            opacity: 0.7; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+        }
+
+        .copy-btn:hover { opacity: 1; background: rgba(255,255, 255, 0.2); }
+        .copy-btn svg { width: 18px; height: 18px; fill: currentColor; }
+        .copy-btn.copied { background-color: #28a745; border-color: #28a745; opacity: 1; }
+
+        /* --- BLOQUES DE CÓDIGO --- */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.5rem; padding-top: 2.5rem;
+            border-radius: var(--radius);
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            border-left: 4px solid var(--primary-color);
+            margin: 0;
+        }
+
+        /* Sintaxis SQL */
+        .kw { color: var(--keyword); font-weight: bold; }
+        .str { color: var(--string); }
+        .num { color: var(--number); }
+        .type { color: #4ec9b0; }
+        .func { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+        
+        /* Colores específicos para Indices */
+        .idx { color: #d4a617; } /* Index en gris oscuro para diferenciar */
+        .trg { color: #d7ba7d; } /* Trigger en púrpura */
+        .sec { color: #e91e63; } /* Security en rojo/verde */
+
+        /* --- EXPLICACIÓN Y TABLAS --- */
+        .explanation {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid #ddd;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-table-wrapper { overflow-x: auto; margin-top: 1rem; margin-bottom: 1.5rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: var(--primary-color); color: var(--white); }
+        tr:nth-child(even) { background-color: var(--bg-color); }
+
+        /* --- RESUMEN FINAL --- */
+        .summary-table th, .summary-table td { border: 1px solid #ddd; }
+        code.inline { background: #eee; padding: 2px 5px; border-radius: 3px; font-family: monospace; color: #d63384; }
+
+        /* --- BOTÓN FINALIZAR CURSO --- */
+        .final-nav-bar { margin-top: 2rem; text-align: right; }
+
+        .btn-finish {
+            background-color: #28a745; /* Verde de éxito */
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-finish:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background-color: #1e8a4b; /* Verde más oscuro al pasar el mouse */
+        }
+
+        .btn-finish svg { width: 20px; height: 20px; fill: currentColor; }
+
+        footer {
+            text-align: center; padding: 2rem; color: #666; font-size: 0.9rem;
+            border-top: 1px solid #eee; margin-top: 3rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .nav-bar { text-align: center; margin-top: 1.5rem; }
+            .step-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <h1>Clase 14 de 14 — Optimización, Índices y Seguridad Básica</h1>
+            <p>🎯 ¡Finalizamos el curso! (Esta es la última clase)</p>
+
+            <!-- BOTÓN DE NAVEGACIÓN FINAL -->
+            <div class="nav-bar">
+                <a href="index.html" class="btn-finish" title="Reiniciar Curso">
+                    🏁 Finalizar Curso
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 15.09l-2.06 1.41-1.41 5.59 19L12 20l8.41 1.41-1.41L14 3l2.09 6.91L10 9 10.59 7 20l4 4-1.41 1.41 8.59 19L12 20L18.41 1.41-1.41 14 3l6.91 10.59 12 20l6.59 10.59 14 3z"/></svg>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Objetivos -->
+        <section id="objetivos">
+            <h2>Objetivo de la clase</h2>
+            <ul class="intro-list">
+                <li>Crear índices para agilizar búsquedas lentas.</li>
+                <li>Uso de ANALYZE TABLE y UPDATE STATISTICS.</li>
+                <li>Seguridad básica: Usuarios y Permisos.</li>
+            </ul>
+        </section>
+
+        <!-- Contexto -->
+        <div class="context-box">
+            <h3>🏢 Contexto real: TechMarket (Optimización)</h3>
+            <p>La empresa ha crecido y ya tiene miles de registros. Las consultas estánd tardando mucho. El gerente te pide:</p>
+            <ul>
+                <li>💰 "¡Los reportes tardan mucho!"</li>
+                <li>💰 "Necesitamos que sean más rápidos."</li>
+                <li>🛡️ "Solo ciertas personas pueden tocar la base de datos, por seguridad."</li>
+            </ul>
+            <br>
+            <p>Aprenderás a optimizar las tablas y a crear usuarios con permisos limitados.</p>
+        </div>
+
+        <!-- PASO 1: Datos Masivos -->
+        <section>
+            <h2>🔹 0. Cargar datos masivos</h2>
+            <p>Para ver la diferencia de velocidad, insertaremos 1000 registros en la tabla `Productos`:</p>
+            <br>
+
+            <!-- Script de carga (bloque único con loop o muchos VALUES) -->
+            <div class="code-wrapper">
+                <button class="copy-btn" aria-label="Copiar código">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
+                <pre><code><span class="kw">USE</span> TechMarket;
+<span class="kw">GO</span>
+
+<span class="kw">INSERT INTO</span> Productos (IdProducto, Nombre, Categoria, Precio, Stock)
+<span class="kw">SELECT TOP (1000)</span>
+<span class="kw">FROM</span> (
+    <span class="kw">SELECT</span> 1, <span class="kw">NEWID()</span>, <span class="str">'Producto '</span> <span class="kw">TOP</span> 1000000
+<span class="kw">FROM</span> master..sysobjects s_columns);
+    <span class="kw">CROSS APPLY</span> <span class="kw">SELECT</span> 
+        <span class="kw">TOP</span> 1000 <span class="kw">ORDER BY</span> <span class="func">NEWID</span>();
+);</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>CROSS APPLY + TOP 1000</code> → Genera 1000 filas dummy con datos aleatorios (como 'Producto 1', 'Producto 2').</li>
+                        <li>Esto simula una base de datos real grande para probar la velocidad de los índices.</li>
+                        <li><code>NEWID()</code> → Genera IDs únicos automáticamente.</li>
+                    </ul>
+                </div>
+
+                <!-- Visualización de datos -->
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>IdProducto</th><th>Nombre</th><th>Categoria</th><th>Precio</th><th>Stock</th></tr></thead>
+                        <tbody>
+                            <tr><td>1</td><td>Producto 1</td><td>Computadoras</td><td>150.00</td><td>10</td></tr>
+                            <tr><td>2</td><td>Producto 2</td><td>Computadoras</td><td>250.00</td><td>20</td></tr>
+                            <tr><td>...</td><td>...</td><td>...</td><td>...</td><td>...</td></tr>
+                            <tr><td>1000</td><td>Producto 1000</td><td>Accesorios</td><td>99.99</td><td>5</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="font-size: 0.9em; color: #666;">* Tabla Productos ahora tiene 1003 filas (las 3 de TechMarket + 1000 nuevas).</p>
+            </div>
+        </section>
+
+        <!-- PASO 1: Búsqueda sin índice -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 1</span> Búsqueda sin índice (¿Por qué es lenta?)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> ¿Por qué es lenta buscar productos por nombre en una tabla tan grande (sin índice)?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> Nombre, Precio
+<span class="kw">FROM</span> Productos
+<span class="kw">WHERE</span> Nombre <span class="kw">LIKE</span> <span class="str">'%Laptop%'</span>;</code></pre>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Precio</th></tr></thead>
+                        <tbody>
+                            <tr><td>Laptop Lenovo</td><td>2899.90</td></tr>
+                            <tr><td>Laptop Gamer</td><td>3500.00</td></tr>
+                            <tr><td>Mouse Logitech</td><td>89.50</td></tr>
+                            <tr><td>Teclado Redragon</td><td>129.99</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li>SQL Server debe leer <strong>toda</strong> la tabla para encontrar 'Laptop'. Esto se llama "Escaneo Completo" y es muy lento con tablas grandes.</li>
+                        <li>Tiempo: Tarda 4.5 segundos (ej. real).</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 2: Crear Índices (Para velocidad) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 2</span> Crear un índice para agilizar búsquedas</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Queremos hacer la búsqueda del Paso 1 muy rápida.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE INDEX</span> <span class="idx">idx_Productos_Nombre</span>
+<span class="kw">ON</span> Productos (Nombre);</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>idx_Productos_Nombre</code> → Nombre del índice. Es muy común prefijarlos con <code>idx_</code>.</li>
+                        <li>Se aplica en la columna <code>Nombre</code>. Ahora, SQL Server crea una estructura de árbol B-Tree para encontrar 'Laptop' en segundos.</li>
+                        <li><strong>Nota:</strong> El índice ocupa espacio en disco, pero ahorra mucho tiempo de CPU.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 3: Búsqueda con índice -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 3</span> Búsqueda con índice (Rápido)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Ejecutamos la misma consulta del Paso 1.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">SELECT</span> Nombre, Precio
+<span class="kw">FROM</span> Productos
+<span class="kw">WHERE</span> Nombre <span class="kw">LIKE</span> <span class="str">'%Laptop%'</span>;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li>SQL Server ya sabe dónde están los 'Laptops' gracias al índice. No necesita buscar fila por fila.</li>
+                        <li>Tiempo: Apenas 0.002 segundos (ej. real).</li>
+                        <li><strong>¡Es 2000 veces más rápido!</strong></li>
+                    </ul>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>Nombre</th><th>Precio</th></tr></thead>
+                        <tbody>
+                            <tr><td>Laptop Lenovo</td><td>2899.90</td></tr>
+                            <tr><td>Laptop Gamer</td><td>3500.00</td></tr>
+                            <tr><td>Mouse Logitech</td><td>89.50</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 4: Estadísticas de Tablas (ANALYZE) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 4</span> Estadísticas y Mantenimiento (ANALYZE TABLE)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> ¿Cuántos productos tenemos y cuánto espacio ocupan en disco? ¿Están fragmentados?
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">ANALYZE TABLE</span> Productos;</code></pre>
+                </div>
+
+                <div class="result-table-wrapper">
+                    <table>
+                        <thead><tr><th>Nombre de la tabla</th><th>Recuento de filas</th><th>Reservado (MB)</th><th>Uso Total (MB)</th></tr></thead>
+                        <tbody>
+                            <tr><td>Productos</td><td>1003</td><td>1.75</td><td>2.50</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>Recuento de filas:</strong> Debe coincidir con <code>COUNT(*)</code>. (1003 filas).</li>
+                        <li><strong>Reservado:</strong> Tamaño en disco que ocupan los datos de las filas. (1.75 MB).</li>
+                        <li><strong>Uso Total:</strong> Total que ocupa la tabla (incluyendo páginas vacías internas).</li>
+                        <li><strong>Fragmentación:</strong> Si borras un dato en medio, el espacio no se libera inmediatamente, queda un hueco (página dividida).</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 5: Estadísticas Actualizadas (UPDATE STATISTICS) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 5</span> Actualizar Estadísticas (UPDATE STATISTICS)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Los índices aceleran las búsquedas, pero también ocupan espacio y pueden desincronizar si se borran datos.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">UPDATE STATISTICS</span> Productos;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li>Actualiza la información que usa el optimizador de SQL Server.</li>
+                        <li><code>UPDATE STATISTICS Tabla;</code> → Recalcula el uso y distribución de las páginas.</li>
+                        <li>Es obligatorio ejecutarlo a veces (programado) para mantener el optimizador al día.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PARTE 2: SEGURIDAD -->
+        <section>
+            <h2>🔒 PARTE 2: SEGURIDAD (USUARIOS Y PERMISOS)</h2>
+            <p>Tu jefe teme miedo de que un empleado borre toda la base de datos por error. Por eso, necesitas crear usuarios con permisos restringidos.</p>
+            <br>
+
+            <h4>💻 Principios de Seguridad Básica</h4>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr><th>Concepto</th><th>Descripción</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Principio de Menor Privilegio</strong></td>
+                            <td>Proporciona el acceso solo a lo estrictamente necesario.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Least Privilege (Menor Privilegio)</strong></td>
+                            <td>Es la política por defecto de seguridad.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Agregar usuario específico</strong></td>
+                            <td>Crea el usuario, asigna la tabla como "Predeterminada" y establece un usuario mapeado (User Mapping) para Login.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PASO 7: Crear Login -->
+        <article class="step-card">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 7</span> Crear Login (Seguridad)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El usuario 'AnalistaSQL' necesita entrar al servidor para ver los datos.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE LOGIN</span> AnalistaSQL
+<span class="kw">WITH PASSWORD</span> <span class="str">'MuyFuerte'</span>;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>AnalistaSQL</code> → Nombre de inicio del usuario.</li>
+                        <li><code>WITH PASSWORD 'MuyFuerte'</code> → Contraseña en texto plano (después lo mejoramos).</li>
+                        <li><strong>Nota:</strong> El usuario `AnalistaSQL` se crea automáticamente en `sys.server_principals` y se mapea a la base `TechMarket` por defecto.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 8: Crear Usuario y Asignar Tabla -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 8</span> Crear Usuario y Asignar Tablas</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Vincular el usuario 'AnalistaSQL' a la base de datos TechMarket y permitirle ver las tablas.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">CREATE USER</span> AnalistaSQL
+<span class="kw">FOR LOGIN</span> AnalistaSQL
+<span class="kw">DEFAULT DATABASE</span> TechMarket;
+<span class="kw">DEFAULT_SCHEMA</span> dbo;
+<span class="kw">DEFAULT_LANGUAGE</span> Espaol;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>CREATE USER ... FOR LOGIN</code> → Vincula el usuario con el Login creado antes.</li>
+                        <li><code>DEFAULT DATABASE TechMarket</code> -> El usuario inicia sesión en esta base automáticamente.</li>
+                        <li><code>DEFAULT_SCHEMA dbo</code> -> El usuario no necesita escribir `USE TechMarket;` (el sistema ya lo sabe).</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 9: Conceder permisos (GRANT) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 9</span> Conceder permisos (GRANT)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> Darle permiso al usuario 'AnalistaSQL' para ver la tabla Productos.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><code><span class="kw">GRANT</span> <span class="kw">SELECT</span> <span class="kw">FROM</span> Productos;
+<span class="kw">TO</span> AnalistaSQL;</code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li><code>GRANT ... TO Usuario;</code> Le da permiso al usuario de ver datos.</li>
+                        <li>En SQL Server, <code>SELECT</code> requiere tener permiso de lectura en la tabla.</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- PASO 10: Quitar permisos (REVOKE) -->
+        <article class="lesson-step">
+            <div class="step-header">
+                <span><span class="step-badge">Paso 10</span> Quitar permisos (REVOKE)</span>
+            </div>
+            <div class="step-content">
+                <div class="question-box">
+                    ❓ <strong>Pregunta:</strong> El empleado 'AnalistaSQL' ya no debe ver los datos. Quitarle acceso a Productos.
+                </div>
+
+                <div class="code-wrapper">
+                    <button class="copy-btn" aria-label="Copiar código">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2zm0 16H8V7h11v14z"/></svg>
+                    </button>
+                    <pre><span class="kw">REVOKE SELECT</span> <span class="kw">FROM</span> <span class="kw">AnalistaSQL;</span></code></pre>
+                </div>
+
+                <div class="explanation">
+                    <p><strong>🧩 Explicación:</strong></p>
+                    <ul>
+                        <li>El usuario ya no puede usar <code>SELECT * FROM Productos;</code> (recibirá el error Mens. 2297).</li>
+                        <li><code>REVOKE SELECT FROM AnalistaSQL;</code> Quita el permiso específico (ver tablas).</li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+
+        <!-- Resumen -->
+        <section>
+            <h2>🧾 Resumen de la Clase 14</h2>
+            <div class="result-table-wrapper">
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th>Tema</th>
+                            <th>Comando</th>
+                            <th>Ejemplo clave</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Índices (CREATE INDEX)</strong></td>
+                            <td><code>CREATE INDEX idx_Tabla(Columna)</code></td>
+td>Acelerar búsquedas lentas.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Estadísticas (ANALYZE TABLE)</strong></td>
+                            <td><code>ANALYZE TABLE Tabla;</code></td>
+                            <td>Ver estadísticas de filas y espacio.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Actualización (UPDATE STATISTICS)</strong></td>
+td><code>UPDATE STATISTICS Tabla;</code></td>
+                            <td>Mantiene optimizaciones actualizadas.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Login (CREATE LOGIN)</strong></td>
+                            <td><code>CREATE LOGIN User WITH PASSWORD;</code></td>
+                            <td>Crea el acceso al servidor.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Seguridad (REVOKE / GRANT)</strong></td>
+                            <td><code>REVOKE/GRANT SELECT ... TO ...</code></td>
+                            <td>Dar o quitar permisos.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <h4>✅ Has completado el curso de 14 Clases</h4>
+            <p>¡Felicidades! Ya sabes optimizar bases de datos grandes y proteger la información sensible de tu empresa. Ahora estás listo para ser un DBA Profesional.</p>
+            <br>
+            <h4>💡 Recomendación final:</h4>
+            <ul>
+                <li><strong>Usa índices solo en tablas grandes.</strong></li>
+                <li><strong>No crees índices en tablas pequeñas:</strong> (tarda más en leer que en ahorrar).</li>
+                <li><strong>Actualiza estadísticas.</strong> (Mantén todo alineado).</li>
+                <li><strong>Usa permisos específicos:</strong> (No le des acceso a todo a nadie).</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2023 Curso de SQL Server - Clase 14</p>
+    </footer>
+
+    <!-- SCRIPT PARA COPIAR CÓDIGO -->
+    <script>
+        document.querySelectorAll('.copy-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const pre = button.nextElementSibling;
+                const code = pre.querySelector('code');
+                const textToCopy = code.innerText;
+
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.classList.add('copied');
+                    button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                        button.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar:', err);
+                    alert('Hubo un error al intentar copiar el código.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
